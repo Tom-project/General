@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="css.css">
+</head>
+
+<body>
+
+
+<div class="splashPage">
+    <div class="navbar">
+        <ul class="nav" id="navID">
+            <li id="Home"> <a href="project3.html"> Home </a> </li>
+            <li id="Emulate"> <a href="Emulate.html"> Emulate </a> </li>
+            <li id="Explanation"> <a href="explanation.html">Explanation</a> </li>
+            <li id="Presentation"> <a href="Presentation.html"> Presentation </a> </li>
+            <li id="About"> <a href="About_us.html"> About us </a> </li>
+        </ul>
+    </div>
+</div>
+
+<div class="parallax"></div>
+<div class="main">
+
+
+   <div class="title">
+    <h1>
+        WELCOME TO OUR ALL PROJECT
+    </h1>
+    <img src="nfc.png" id="nfcSymbol" alt="NFC symbol next to title">
+
+    <!--<hr>-->
+    </div>
+
+
+  <div class="infoContainer">
+    <div class="box">
+        <div class="content">
+           <h2>A LITTLE BIT ABOUT OUR PROJECT:</h2>
+
+            <p> One of our goals is to register an entire class to a lesson through the use of NFC cards. This will be done without any student needing to be present. To achieve this we will use: a Beaglebone Black and an RFID chip reader and writer.</p>
+            <p>
+            In addition to the previous aim, we want to emulate or create a master card that is able to open any room in the Engineering and computing Building.
+            </p>
+
+
+         </div>
+     </div>
+</div>
+             <img src="nfc-contactless-payment.jpg" id="NFC">
+
+             <img src="nfclogo.png" class="icon" id="icon1">
+             <img src="nfc_icon2.png" class="icon" id="icon2">
+             <img src="nfcIcon.png" class="icon" id="icon3">
+
+</div>
+    <div class="content2">
+        <!--<hr></hr>-->
+        <img src="code.png" id="ct2_pic">
+        <img src="code2.png" id="ct2_pic2">
+        <div class="content2_text">
+
+        <div class="wrapper">
+                <h2 class="title2"> SOME PROBLEMS WE RAN INTO: </h2>
+                    <ul class="organised_list">
+                        <li>One problem we encountered was that the documentation the card reader had was in Chinease, or very broken English, so translating this slowed progress as there was very limited usefull information/ instructions online for this machine.</li>
+                        <li> The NFC chip had basic features so we had to figure out a way too work around this as the libraries were not working.</li>
+                        <li> The beaglebone deletes imporant libraries necessary to make the reader work. This happens when it reaches full storage. A way to fix this would be to use a rasberry pie or to use an SD card.</li>
+                        <li> Having multiple people working on the front end and the back end of the website was tricky when it came to implementing the two together. This was because different variable names were used, in addition to this, two different languages were used, so combining these came with their own problems.</li>
+                        <li> The card reader we were using changed some meta-data on the cards which affected the uid displayed to us. This meant that we were having problems reading data off cards and putting data onto blank ones. One way we solved this was using better equipment. </li>
+
+                    </ul>
+            </div>
+        </div>
+    </div>
+
+<div class="content3">
+    <div class="ct3_text">
+        <h2>WHAT WE HAVE LEARNED:</h2>
+
+        <p>Throughout this project there have been many challenges we have come across and had to solve. These challegnges in turn were a learning curve for all of us. One of the many lessons we learned was that different types of NFC cards have different levels of security/ encryption. This meant that getting the information we wnated out of them was more difficult than intended. We also learn't that the inital way of going about this project broke some of the rules of the RIPA act.
+
+
+        The cards are mifaree classic. We found out this information from the first part of coummunication that releases manufactuerer details and the UID which arent encrypted.
+
+        The card is Type A (According to the ISO 14443 standard for NFC's) What descries and structures the intial communication between the card and the reader allowing further communication lke in TCP, From this point the mifaree classic card differs from this standard by encrypting any following data
+
+        The cards us a propiatory encryption system called crypto-1 which uses random generated numbers to validate the reader. This is done when the card want access to a section of the card by sending the reader a nonce which it has to send back encrypted with crypto-1 encryption using the secret key </p>
+
+
+    </div>
+</div>
+
+<footer class="footer_text">
+    <div>
+        <p>ALL Stars Web Dev &copy; 2019 <br/>
+            <br/>
+            Coventry University, <br/>
+            Priory St, <br/>
+            Coventry, <br/>
+            CV1 5FB</P>
+
+        <img src="ALLlogo.png" class="logo" alt="https://allstars.org/wp-content/themes/allstarsproject/images/logo.svg">
+    </div>
+</footer>
+
+</div>
+
+
+</body>
+</html>

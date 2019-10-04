@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="css.css">
+
+</head>
+
+<body>
+
+
+    <div class="navbar2">
+        <ul class="nav2">
+            <li id="Home"> <a href="project3.html"> Home </a> </li>
+            <li id="Emulate"> <a href="Emulate.html"> Emulate </a> </li>
+            <li id="Explanation"> <a href="explanation.html">Explanation</a> </li>
+            <li id="Presentation"> <a href="Presentation.html"> Presentation</a> </li>
+            <li id="About"> <a href="About_us.html"> About us</a> </li>
+
+
+    </div>
+    <div class="Explanation_title_div">
+    <h1 class="Explanation_title"> Explanation</h1>
+    </div>
+
+
+
+
+<div class="list-container2">
+    <img class="img_card" src="code.jpg" alt="code">
+    <div class="list_wrap">
+        <ul class="ul-list">
+            <li class="Nicks_text">
+                <p>The back end of our website which is used to communicate with the webserver uses jquery (a programming language). It sends queries to the web server through an api, this was developed by Aaron</p>
+                <p>Depending on what api request was sent, the webserver will return with different things <ul>
+                    <li>However it will always returns a message, either if the request was succesful or unsuccesful</li>
+                    <li>With a succesfull request it will return the id of the card from the server</li>
+                    <li>As well as this it will return an object, “data”, containing information about the card such as UID etc. </li></ul></p>
+                <p>Functions: getScan
+                                                    <ul>
+                                                        <li>
+                                                            When you click the "Scan" button on the webpage it will run the function written in Jquery which will make a POST request to the server containing all the information about the most recently scanned card
+                                                            </li>
+                                                            <li>
+                                                            The server then adds the card with info to the list of available cards, the list can be updated using the "List" button.
+                                                            </li>
+                                                    </ul>
+                                                </p>
+                <p>Functions: getList
+                                                    <ul>
+                                                        <li>
+                                                            When you click the "List" button on the webpage it will run the function written in Jquery which will make a POST request to the server with no data.
+                                                            </li>
+                                                            <li>
+                                                            The Server returns the list of cards stored with all their information. This can be used to update the list.
+                                                            </li>
+                                                            <li>
+                                                            It will also iterate over each item in the list, creating a span object for each one that is displayed to the user.
+                                                            </li>
+                                                            <li>
+                                                            Amazingly formatted by Tom and Brandon’s css.
+                                                            </li>
+                                                    </ul>
+                                                </p>
+
+
+                <p>Planned features: Emulate cards
+                                                    <ul>
+                                                        <li>
+                                                            Our goal is to make a POST request to the server, again to get all the info of the specified card
+                                                            </li>
+                                                            <li>
+                                                            And then for it to communicate with the BeagleBone to tell it to emulate the selected card.
+                                                            </li>
+                                                            <li>
+                                                            Allowing us to send the data to a blank card.
+                                                            </li>
+                                                    </ul>
+                                                </p>
+
+            </li>
+        </ul>
+</div>
+</div>
+
+
+    <div class="footer">
+        <p>ALL Stars Web Dev &copy; 2019 <br/>
+            <br/>
+            Coventry University, <br/>
+            Priory St, <br/>
+            Coventry, <br/>
+            CV1 5FB</P>
+
+        <img src="ALLlogo.png" class="logo" alt="https://allstars.org/wp-content/themes/allstarsproject/images/logo.svg">
+    </div>
+
+</footer>
+</body>
+</html>

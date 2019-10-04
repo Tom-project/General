@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="css.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script>
+function getIDInfo(){
+    var action_src = $("#value").val();
+
+    var urlLink = "http://167.99.89.253:8080/api/get/";
+    urlLink = urlLink + action_src;
+    $("p").remove()
+    $.post(urlLink, function(data){
+        console.log("Message: " +data.msg + "\nID: " + data.data.uid);
+        $("<p>UID: " + data.data.uid + "</p>").appendTo(".getInfo");
+    });
+};
+
+function getScan(){
+    $.post("http://167.99.89.253:8080/api/scan", function(data){
+        alert("ID: " +data.data.id);
+    });
+};
+
+function getList(){
+    $.post("http://167.99.89.253:8080/api/list", function(data){
+        $("li").remove();
+        for (var i in data.data){
+            console.log("UID:" + data.data[i].uid + "\n");
+            $("<li>UID: " +data.data[i].uid + "</li>").appendTo(".listInfo");
+        };
+    });
+};
+</script>
+</head>
+
+<body>
+
+
+    <div class="navbar2">
+        <ul class="nav2">
+            <li id="Home"> <a href="project3.html"> Home </a> </li>
+            <li id="Emulate"> <a href="Emulate.html"> Emulate </a> </li>
+            <li id="Explanation"> <a href="explanation.html">Explanation</a> </li>
+            <li id="Presentation"> <a href="Presentation.html"> Presentation</a> </li>
+            <li id="About"> <a href="About_us.html"> About us</a> </li>
+
+
+    </div>
+
+
+<div class="emulate-title">
+    <h1 class="Emulate_title"> EMULATE A CARD</h1>
+    <span class="emulate-title-a"></span>
+    <span class="emulate-title-b"></span>
+</div>
+
+<div class="blank-space"></div>
+
+<a class="button1" value="Scan" onclick="getScan()" href="#">
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+    Scan
+</a>
+
+<a class="button2" value="List" onclick="getList()" href="#">
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+    List
+</a>
+
+
+
+<div class="list-container">
+    <img class="img_card" src="code.jpg" alt="code">
+    <div class="list_wrap">
+        <ul class="ul-list">
+            <li class="list_for_nfc">
+                <span class="Card_type_1"><a href="">Card type 1</a></span>
+                <span class="Card_type_2"><a href="">Card type 2</a></span>
+                <span class="Card_type_3"><a href="">Card type 3</a></span>
+                <span class="Card_type_4"><a href="">Card type 4</a></span>
+                <span class="Card_type_5"><a href="">Card type 5</a></span>
+                <span class="Card_type_6"><a href="">Card type 6</a></span>
+                <span class="Card_type_7"><a href="">Card type 7</a></span>
+                <span class="Card_type_8"><a href="">Card type 8</a></span>
+            </li>
+        </ul>
+    </div>
+</div>
+
+    <div class="footer">
+        <p>ALL Stars Web Dev &copy; 2019 <br/>
+            <br/>
+            Coventry University, <br/>
+            Priory St, <br/>
+            Coventry, <br/>
+            CV1 5FB</P>
+
+        <img src="ALLlogo.png" class="logo" alt="https://allstars.org/wp-content/themes/allstarsproject/images/logo.svg">
+
+    </div>
+
+</footer>
+</body>
+</html>

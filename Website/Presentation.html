@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="css.css">
+
+    <script>
+        var counter = 1;
+        var btn;
+        var container;
+        var btn2;
+
+        function changeImage(){
+
+            if(counter<16)
+            {
+
+                counter +=1;
+
+                btn2 = document.getElementById('button2');
+                btn2.style.padding="17px 60px";
+
+                container = document.getElementById('button-container');
+                container.style.top="75%";
+
+                container = document.getElementById('button-container2');
+                container.style.transform="translate(-644%)";
+
+                var btn = document.getElementById('pres');
+
+                var url;
+                url = "url(Presentation/Slide"+counter+".png)";
+
+
+                btn.style.backgroundImage=url;
+
+
+                if(counter==9)
+                {
+                    container = document.getElementById('button-container');
+                    container.style.top="78%";
+                }
+
+                if(counter==14)
+                {
+                    container = document.getElementById('button-container2');
+                    container.style.transform="translate(-693%)";
+
+                    btn2 = document.getElementById('button2');
+                    btn2.style.padding="17px 55px";
+                }
+
+
+            }
+
+
+        }
+
+        function changeImageBack(){
+
+            if(counter>1)
+            {
+                counter -=1;
+
+                btn2 = document.getElementById('button2');
+                btn2.style.padding="17px 60px";
+
+                container = document.getElementById('button-container');
+                container.style.top="75%";
+
+                container = document.getElementById('button-container2');
+                container.style.transform="translate(-644%)";
+
+                var btn = document.getElementById('pres');
+
+                var url;
+                url = "url(Presentation/Slide"+counter+".png)";
+
+
+                btn.style.backgroundImage=url;
+
+
+
+                if(counter==9)
+                {
+                    container = document.getElementById('button-container');
+                    container.style.top="78%";
+                }
+
+                if(counter==14)
+                {
+                    container = document.getElementById('button-container2');
+                    container.style.transform="translate(-693%)";
+
+                    btn2 = document.getElementById('button2');
+                    btn2.style.padding="17px 55px";
+                }
+            }
+
+
+        }
+
+
+
+    </script>
+</head>
+
+<body>
+
+    <div class="navPres">
+        <ul class="nav2">
+                <li id="Home"> <div><a href="project3.html"> Home </a> </div></li>
+                <li id="Emulate"> <div><a href="Emulate.html"> Emulate </a></div> </li>
+                <li id="Presentation"> <div><a href="Presentation.html"> Explanation </a></div> </li>
+                <li id="Explanation"> <a href="explanation.html">Presentation</a> </li>
+                <li id="About"> <div><a href="About_us.html"> About us </a></div> </li>
+        </ul>
+    </div>
+
+
+    <div class="mainSpace">
+        <div class="button_container" id="button-container">
+            <button class="btn" onclick="changeImage()"><span>Next</span></button>
+        </div>
+
+        <div class="button_container" id="button-container2">
+            <button class="btn2" onclick="changeImageBack()" id="button2"><span>Back</span></button>
+        </div>
+
+        <div class="presWrap" id="pres">
+            <div class="presentation">
+                <!--<img src="Presentation/Slide2.png">-->
+
+
+
+
+        </div>
+    </div>
+</div>
+    <div class="sidebar-left"></div>
+    <div class="sidebar-right"></div>
+
+
+    <div class="footer">
+        <p>ALL Stars Web Dev &copy; 2019 <br/>
+            <br/>
+            Coventry University, <br/>
+            Priory St, <br/>
+            Coventry, <br/>
+            CV1 5FB</P>
+
+        <img src="ALLlogo.png" class="logo" alt="https://allstars.org/wp-content/themes/allstarsproject/images/logo.svg">
+
+    </div>
+</body>

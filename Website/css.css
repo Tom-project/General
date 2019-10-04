@@ -1,0 +1,861 @@
+*{
+    font-family: "Helvetica", sans-serif;
+}
+
+@-webkit-keyframes test{
+    from{opacity:0}
+    to{opacity:1}
+}
+
+p{
+    padding-top: 10px;
+    padding-bottom: 10px;
+    margin: 25px;
+    border-width: 3px;
+}
+.title{
+    border: 2px none green;
+    transform: translate(35%);
+
+}
+
+.title #nfcSymbol{
+    height: 74px;
+    position: relative;
+    transform: translate(630%,-145%);
+    -webkit-animation: test 1s ease infinite;
+
+}
+
+.title h1 {
+    border-bottom: 4px solid #baf6ff;
+    border-image: linear-gradient(90deg, #baf6ff ,#baf6ff, #ffffff,#ffffff,#ffffff,#ffffff,#ffffff  );
+    border-image-slice: 1;
+    position: relative;
+    transform: translate(-5%,-70%)
+}
+
+.left_side_bar{
+    padding-right:700px;
+}
+footer{
+    background-color: #808088;
+    color:black;baf6ff;
+    padding: 15px;
+}
+body, html{
+    background-color: white;
+    height: 100%;
+    width: 100%;
+    margin:0;
+
+}
+
+body{
+    overflow-x: hidden;
+}
+
+
+.parallax {
+  /* The image used */
+  background-image: url("Security.jpg");
+  /* Full height */
+  height: 100%;
+
+  /* Create the parallax scrolling effect */
+  background-attachment: fixed;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+.navbar{
+    width:100%;
+    height: 10%;
+    background-color: transparent;
+    position: absolute;
+    top:0px;
+    }
+
+
+
+.nav{
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+ul{
+    font-size: 15px;
+}
+
+.nav li{
+    float: left;
+}
+.nav li a{
+    display: block;
+    text-align: center;
+    padding: 25px 16px;
+    text-decoration: none;
+    height: 100%;
+    color:white;
+}
+
+a{
+    text-decoration: none;
+}
+
+.navbar:hover{
+    background-color: rgba(186, 246, 255,0.6);
+    transition: 1s ease;
+
+
+}
+
+#Home:hover, #Emulate:hover, #NFC:hover, #Presentation:hover, #Explanation:hover, #About:hover {
+    background-color: #d6d6d6;
+    height: 100%;
+    transition: 0.5s ease;
+}
+
+
+.navbar:hover a{
+    color: white;
+    padding-top: 30px;
+}
+
+.navbar li a:hover{
+    color: black;
+
+}
+
+/* works like a route, making navbar hover and including the a for inheritance */
+.infoContainer {
+    border: 4px none green;
+    height: 300px;
+    max-width: 55%;
+    position: relative;
+    background:linear-gradient(40deg,#baf6ff,#bfbaff);
+    z-index: -1;
+    justify-content: center;
+    align-items: center;
+    transform: translate(1%);
+
+}
+
+.infoContainer .box:before{
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    right: 1.5px;
+    bottom: 1.5px;
+    background: white;
+    transform: skew(2deg,2deg);
+}
+
+.infoContainer .box {
+    position: relative;
+    border: 2px none purple;
+    height: 99%;
+    justify-content: center;
+    align-items: center;
+    width: 99.7%;
+}
+
+.content{
+    position: relative;
+    padding: 20px;
+}
+
+
+.infoContainer h2{
+    padding-left:3%;
+    margin-bottom:0;
+    border: 2px none purple;
+}
+
+.main #NFC{
+    display: inline-block;
+    height: 400px;
+    border: 2px none orange;
+    transform: translate(148%,-85%);
+
+}
+
+.main .icon{
+    display: inline-block;
+    border: 2px none green;
+}
+
+.main #icon1{
+    height: 80px;
+    position: relative;
+    transform: translate(-650%,-350%);
+}
+
+.main #icon2{
+    height: 80px;
+    position: relative;
+    transform: translate(-300%,-350%);
+}
+
+.main #icon3{
+    height: 80px;
+    position: relative;
+    transform: translate(-265%,-358%);
+
+}
+
+.content2{
+    background-color: black;
+    overflow: hidden;
+    z-index: -1;
+}
+
+.content2, footer{
+    transform: translate(0,40%)
+}
+
+
+.content2 .content2_text{
+    position: relative;
+    transform: translate(35%,3%);
+    padding-bottom: 20px;
+    color: white;
+}
+
+.content2 .wrapper{
+    border:1px none red;
+    width: 29%;
+    padding: 0.1% 0.1% 0.1% 0.1%;
+    background-color: #000;
+    border-left: 4px solid white;
+    border-right: 4px solid white;
+    border-image: linear-gradient(180deg, #000,#000,#fff,#000,#000);
+    border-image-slice: 1;
+
+}
+
+.content2 ul{
+    transform: translate(4.5%);
+}
+
+
+/*
+.content2 .content2_text .title2{
+    border-bottom: 4px solid #baf6ff;
+    border-width: 1%;
+    border-image: linear-gradient(90deg, white, black,black,black,black);
+    border-image-slice: 1;
+}
+*/
+#ct2_pic{
+    height: 330%;
+    position: absolute;
+    transform: translate(-30%,-1%);
+
+}
+
+#ct2_pic2{
+    height: 330%;
+    position: absolute;
+    transform: translate(50%,-20%);
+}
+
+.organised_list{
+    border-radius: 15px;
+    padding-bottom: 10px;
+
+
+}
+
+ hr {
+    display: block;
+    height: 1px;
+    border: 0;
+    border-top: 1px solid #ccc;
+}
+
+.main{
+    top: 100%;
+    width:100%;
+    height: 100%;
+}
+
+.title{
+    padding-top:70px;
+    padding-bottom: 5%;
+}
+
+.Emulate_choice{
+    background-color: grey;
+    box-shadow: 10px 10px 5px;
+    text-align: center;
+    text-decoration: none;
+    font-size: 24px;
+    color:black;
+    width: 450px;
+}
+
+.content3{
+    background-color: white;
+    height: 400px;
+}
+
+.ct3_text{
+    position: relative;
+    top: 50%;
+    left: 5%;
+}
+
+
+.ct3_text h2{
+    border-bottom: 4px solid #baf6ff;
+    border-width: 1%;
+    border-image: linear-gradient(90deg, #baf6ff , #ffffff,#ffffff,#ffffff,#ffffff);
+    border-image-slice: 1;
+}
+
+.ct3_text p{
+    width: 80%;
+    position: absolute;
+    left: -1%;
+    top: 30%;
+}
+
+footer p{
+    display: inline-block;
+    color: black;
+}
+
+.footer:hover p{
+    color: #baf6ff;
+}
+
+footer img{
+    height: 15%;
+    width: 15%;
+    display: inline-block;
+    position: relative;
+    transform: translate(460%, 10%);
+
+}
+
+
+
+
+/* ------------------------------- Emulate Page -------------------------- */
+
+.list_wrap{
+    position: absolute;
+    height: 79%;
+    width: 64.7%;
+    transform: translate(28%, 33%);
+    overflow-y: scroll;
+    border: 1px none red;
+}
+
+.nav2 li{
+    float: left;
+}
+.nav2 li a{
+    display: block;
+    text-align: center;
+    padding: 25px 16px;
+    text-decoration: none;
+    height: 100%;
+    color:black;
+}
+.nav2{
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background-color: rgba(186, 246, 255,0.6);
+    color:black;
+}
+
+.navbar2{
+    width:100%;
+    height: 10%;
+    background-color: transparent;
+    position: absolute;
+    top:0px;
+    }
+
+ul li .list_for_nfc span{
+    text-decoration: none;
+}
+
+
+
+
+
+
+
+
+
+/* ------------------------------The card type list in the middle of the page ------------------------------*/
+.img_card{
+    width:65%;
+    height:90%;
+    position: absolute;
+    transform: translate(50px, 50px;);
+    left:270px;
+    top:200px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.5);
+}
+
+.list_for_nfc{
+    position: absolute;
+    list-style-type: none;
+    color: black;
+    list-style: none;
+    text-decoration: none;
+    transform: translate(90%);
+}
+
+.list-container ul li span{
+    display: block;
+    margin: 10%;
+    width: 265px;
+    border:2px solid white;
+    padding:10px;
+    text-transform: uppercase;
+    box-shadow: 0 20px 50px rgba(0,0,0,.5);
+    background: rgba(191, 186, 255,0.6);
+    font-size: 40px;
+}
+
+.list-container ul li span a{
+    color: white;
+    list-style: none;
+    text-decoration: none;
+}
+
+body{
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+
+}
+
+@-webkit-keyframes emulate-title-a{
+    from {transform: translateX(-100%);}
+    to {transform:translateX(100%);}
+
+
+}
+
+@-webkit-keyframes emulate-title-b{
+    from {transform: translateX(100%);}
+    to {transform:translateX(-100%);}
+
+
+}
+
+.emulate-title{
+    border: 1px none red;
+    height: 90px;
+    position: absolute;
+    width: 20%;
+    transform: translate(0, 100%);
+    left: 610px;
+    overflow: hidden;
+}
+
+
+
+.emulate-title h1 {
+    border-bottom: 4px none #baf6ff;
+    border-image: linear-gradient(90deg, #bfbaff,#bfbaff,#bfbaff,#bfbaff,#ffffff,#ffffff);
+    border-image-slice: 1;
+    border-width: 1%;
+    overflow: hidden;
+
+}
+
+.emulate-title span:nth-child(2) {
+    position: absolute;
+    bottom: 35%;
+    left: 0;
+    width: 50%;
+    height: 4px;
+    background: linear-gradient(to right,white,#bfbaff);
+    -webkit-animation: emulate-title-a 1.5s ease infinite;
+    -webkit-animation-fill-mode:forwards;
+    animation-delay:0s;
+}
+
+.emulate-title span:nth-child(3) {
+    position: absolute;
+    bottom: 35%;
+    right:0;
+    width: 50%;
+    height: 4px;
+    background: linear-gradient(to right,#bfbaff,white);
+    -webkit-animation: emulate-title-b 1.5s ease infinite;
+    -webkit-animation-fill-mode:forwards;
+    animation-delay:1.5s;
+}
+
+.blank-space{
+    position: absolute;
+    border: 2px none red;
+    height: 10%;
+    width: 3%;
+    transform: translate(1970%,110%);
+    background-color: #fff;
+}
+
+/* ------------------------------mental animation buttons ------------------------------*/
+.button1{
+    position: absolute;
+    top: 50%;
+    left: 8%;
+    transform: translate(-50%, -50%); /* The transform property applies a 2D or 3D transformation to an element. This property allows you to rotate, scale, move, skew, etc.  */
+    color: white;
+    padding: 30px 60px;
+    font-size: 30px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-decoration: none;
+    box-shadow: 0 20px 50px rgba(0,0,0,.5);
+    overflow: hidden;
+    background: rgba(191, 186, 255);
+
+}
+.button1:before{
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    bottom: 2px;
+    width: 50%;
+}
+
+.button2{
+    position:  absolute;
+    top: 50%;
+    right:  -3%;
+    transform: translate(-50%, -50%); /* The transform property applies a 2D or 3D transformation to an element. This property allows you to rotate, scale, move, skew, etc.  */
+    color: white;
+    padding: 30px 60px;
+    font-size: 30px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-decoration: none;
+    box-shadow: 0 20px 50px rgba(0,0,0,.5);
+    overflow: hidden;
+    background: rgba(191, 186, 255);
+}
+.button2:before{
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    bottom: 2px;
+    width: 50%;
+
+}
+a span:nth-child(1){
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(to right,white,#baf6ff); /* creates a line on the top of the span fading from 100% opacity to 0% going from the left to the right*/
+    animation: animate1 2s linear infinite; /* this creates an infinite animation loop for our linear gradient */
+}
+
+@keyframes animate1{
+    0%{
+        transform: translateX(-100%); /* this moves the line we have defined above across the screen on the X axis */
+    }
+    100%{
+        transform: translateX(100%); /*. The minus and positive numbers represent whicbh direction the line will travle along that axis (x or y) */
+    }
+}
+
+a span:nth-child(2){
+    position:absolute;
+    top: 0;
+    right: 0;
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(to bottom, #bfbaff,#bfbaff,#baf6ff,#baf6ff);
+    animation: animate2 2s linear infinite;
+    animation-delay: 1s;
+}
+
+@keyframes animate2{
+    0%{
+        transform: translateY(-100%);
+    }
+    100%{
+        transform: translateY(100%);
+    }
+}
+
+a span:nth-child(3){
+    position:absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(to left,white,#baf6ff);
+    animation: animate3 2s linear infinite;
+}
+
+@keyframes animate3{
+    0%{
+        transform: translateX(100%);
+    }
+    100%{
+        transform: translateX(-100%);
+    }
+}
+
+a span:nth-child(4){
+    position:absolute;
+    top: 0;
+    left: 0;
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(to top,#bfbaff,#bfbaff,#baf6ff,#baf6ff);
+    animation: animate4 2s linear infinite;
+    animation-delay: 1s;
+}
+
+@keyframes animate4{
+    0%{
+        transform: translateY(100%);
+    }
+    100%{
+        transform: translateY(-100%);
+    }
+}
+
+/* ---------------------------------------------------- Presentation page ------------------------------------------- */
+
+.nav2{
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+ul{
+    font-size: 15px;
+}
+
+.nav2 li{
+    float: left;
+}
+.nav2 li a{
+    display: block;
+    text-align: center;
+    padding: 25px 16px;
+    text-decoration: none;
+    height: 100%;
+    color:black;
+}
+
+.navPres{
+    width:100%;
+    height: 10%;
+    background-color: rgba(186, 246, 255,0.6);
+    position: absolute;
+    top:0px;
+}
+
+.footer{
+    background-color: #808088;#565656;
+    color:black;#baf6ff;
+    padding:5px;
+    padding-bottom: 30px;
+    padding-top: 0px;
+    position: absolute;
+    bottom: 0px;
+    height: 20%;
+    transform: translate(0,120%);
+    margin: 0;
+
+}
+
+.footer p{
+    display: inline-block;
+    color: black;#7de0f1;
+}
+.footer img{
+    height: 85%;
+    width: 15%;
+    display: inline-block;
+    position: relative;
+    transform: translate(460%, 10%);
+}
+
+.mainSpace{
+    height: 100%;
+    width: 100%;
+    border: 2px none green;
+    position: absolute;
+    transform: translate(0,10%);
+
+}
+
+
+.presWrap{
+    width: 80%;
+    height: 95%;
+    transform: translate(12.55%);
+    position: relative;
+    background-image: url("Presentation/Slide1.png");
+    border:2px none red;
+}
+
+.presentation img{
+    height: 110%;
+    width: 100%;
+    max-width: 100%;
+}
+
+.button_container {
+  position: absolute;
+  right: 10%;
+  top: 75%;
+  z-index: 1;
+}
+
+#button-container2{
+    transform: translate(-644%);  /*693*/
+}
+
+.btn {
+  border: none;
+  display: block;
+  text-align: center;
+  text-transform: uppercase;
+  outline: none;
+  overflow: hidden;
+  position: relative;
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  background-color: #222;
+  padding: 17px 60px;
+  margin: 0 auto;
+  box-shadow: 0px 5px 15px rgba(0,0,0,0.20);
+  box-shadow: 2px 0px 0px rgba(0,0,0,0.20);
+}
+
+.btn2 {
+  border: none;
+  display: block;
+  text-align: center;
+  text-transform: uppercase;
+  outline: none;
+  overflow: hidden;
+  position: relative;
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  background-color: #222;
+  padding: 17px 60px; /*55*/
+  margin: 0 auto;
+  box-shadow: 0px 5px 15px rgba(0,0,0,0.20);
+}
+
+.btn span, .btn2 span{
+  position: relative;
+  z-index: 1;
+}
+
+.btn:after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 490%;
+  width: 140%;
+  background: #78c7d2;
+  -webkit-transition: all .5s ease-in-out;
+  transition: all .5s ease-in-out;
+  -webkit-transform: translateX(-98%) translateY(-25%) rotate(45deg);
+  transform: translateX(-98%) translateY(-25%) rotate(45deg);
+}
+
+.btn:hover:after {
+  -webkit-transform: translateX(-9%) translateY(-25%) rotate(45deg);
+  transform: translateX(-9%) translateY(-25%) rotate(45deg);
+}
+
+.btn2:after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 490%;
+  width: 140%;
+  background: #78c7d2;
+  -webkit-transition: all .5s ease-in-out;
+  transition: all .5s ease-in-out;
+  -webkit-transform: translateX(61.5%) translateY(-25%) rotate(45deg);
+  transform: translateX(61.5%) translateY(-25%) rotate(45deg);
+}
+
+.btn2:hover:after {
+  -webkit-transform: translateX(-9%) translateY(-25%) rotate(45deg);
+  transform: translateX(-9%) translateY(-25%) rotate(45deg);
+}
+
+.sidebar-left, .sidebar-right{
+    border:2px none red;
+    height: 95%;
+    position: absolute;
+    width: 9.8%;
+    z-index: -1;
+}
+
+.sidebar-left{
+    transform: translate(0,-100%);
+}
+
+.sidebar-right{
+    transform: translate(893%,-100%);
+}
+
+
+
+
+
+/*-------------------------------------- EXPLANATION PAGE FOR EMULATE ------------------------------------ */
+
+.Explanation_title{
+    position: absolute;
+    left: 650px;
+}
+
+
+.Nicks_text{
+    position: absolute;
+    list-style-type: none;
+    color: black;
+    list-style: none;
+    text-decoration: none;
+    transform: translate(90%);
+}
+
+
+.list-container2 ul li{
+    display: block;
+    margin: 10%;
+    width: 265px;
+    border:2px solid white;
+    padding:10px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.5);
+    background: rgba(191, 186, 255,0.6);
+    font-size: 15px;
+}
+
