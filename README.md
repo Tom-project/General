@@ -1,2 +1,2 @@
-# Project
-My first year University project
+#Project
+A repo for scripts, notes and projects
