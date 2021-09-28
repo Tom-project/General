@@ -3,13 +3,13 @@ from requests_toolbelt import MultipartEncoder
 
 session = requests.Session()
 
-#cookey = input("Please Enter your MoodleSession cookie: ")
-#sesskey = input("Please Enter you session token: ")
-#storage = input("Please enter you storage key: ")
+cookey = input("Please Enter your MoodleSession cookie: ")
+sesskey = input("Please Enter you session token: ")
+storage = input("Please enter you storage key: ")
 
-cookey = "MoodleSession=8e9s8j1o2hjj9qil20e3eh6v7g"
-sesskey = "P2O180H9Eh"
-storage = "8f5e1997-29d0-4500-8ba7-f9ef615acbf4"
+#cookey = "MoodleSession=8e9s8j1o2hjj9qil20e3eh6v7g"
+#sesskey = "P2O180H9Eh"
+#storage = "8f5e1997-29d0-4500-8ba7-f9ef615acbf4"
 proxies = {"http": "http://127.0.0.1:8080", "https": "http://127.0.0.1:8080"}
 
 def upload():
