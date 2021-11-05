@@ -1,3 +1,4 @@
-#Project
+# Project
 
-A repo for scripts, notes and projects
+A repo for custom exploit scripts or projects i'm currently working on
+
