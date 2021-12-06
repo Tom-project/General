@@ -18,7 +18,7 @@ headers = {'Host': '192.168.22.100',
 		'Content-Type': 'multipart/form-data; boundary=---------------------------343376800035355685862873661517',
 		'Origin': 'http://192.168.22.100',
 		'Connection': 'close',
-		'Referer': 'http://192.168.22.100/Cards/New',
+		'Referer': 'http://192.168.22.100/Login',
 		'Cookie':'FLAG=c2VjcmV0cy1hcmUtbWVhbnQtdG8tYmUtdG9sZA==;JSESSIONID=8A728A3A7991FA3CEA96EF45B54D89BB',
 		'Upgrade-Insecure-Requests': '1'}
 
