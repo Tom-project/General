@@ -19,7 +19,8 @@ A script to upload a malicious plugin to a vulnerable moodle interface to achiev
 A python script to find EIP register on remote vulnerable applications.
 
 ## SQLBinarySearch
-This is a script to enumerate information from a server vulnerable to blind sql injection. This script will only work if there is someway to determine if a staement is true or false via a string. For total blind sql injection see SQLBinaryTimebased
+This is a script that uses the binary search algorithm to enumerate information from a server vulnerable to blind sql injection. This script will only work if there is some
+ way to determine if a statement is true or false. For total blind sql injection see SQLBinaryTimebased
 
 ## SQLBinaryTimebased
-This is a script to enumerate information from a server vulnerable to blind sql injection via a time based attack.
+This is a script that uses the binary search algorithm to enumerate information from a server vulnerable to blind sql injection via a time based attack.
