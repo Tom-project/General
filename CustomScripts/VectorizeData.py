@@ -1,9 +1,14 @@
 # from typing import Annotated
-from re import A
+#from re import A
 import pefile
 import os
 import struct
 import logging
+
+i = 0
+API_LIST = []
+File = "C:\Windows\System32\WindowsPowerShell\\v1.0\powershell.exe"
+target = pefile.PE(File)
 
 # ------------ Initialize Log file ------------
 logging.basicConfig(filename='test1.log', encoding='utf-8', level=logging.DEBUG)
@@ -20,14 +25,11 @@ ch.setFormatter(formatter)
 
 # add ch to logger
 logger.addHandler(ch)
-# ---------------------------------------------
-i = 0
-API_LIST = []
-File = "C:\Windows\System32\WindowsPowerShell\\v1.0\powershell.exe"
-target = pefile.PE(File)
+    # ---------------------------------------------
 
 
 def main():
+    i = 0
     # Pulls APIs from PE
     for entry in target.DIRECTORY_ENTRY_IMPORT:
         for API in entry.imports:
@@ -47,8 +49,8 @@ def main():
     # Looking for Win API call of interest
     if ("GetProcAddress" in API_LIST):
         print("GetProcAddress Found")
-        c = API_LIST.index("GetProcAddress")
-        logger.info(API_LIST[c])
+        x = API_LIST.index("GetProcAddress")
+        logger.info(API_LIST[x])
         x = input("Would you like to see the rest of the list? ")
         if x == "y":
             print(API_LIST)
@@ -60,8 +62,8 @@ def main():
     pe2 = pefile.PE("C:\Windows\System32\\amsi.dll")
 
     for section in pe2.sections:
-        print(section.Name + "Virtual Address: " + hex(section.VirtualAddress) + "Virtual Size: " +  hex(section.Misc_VirtualSize) + 
-                    "Raw data size: " + section.SizeOfRawData ) 
+        print(section.Name, "Virtual Address: ", hex(section.VirtualAddress), "Virtual Size: ",  hex(section.Misc_VirtualSize),
+                    "Raw data size: ", section.SizeOfRawData ) 
 
     # ---------------------------
     
