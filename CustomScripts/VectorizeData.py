@@ -4,6 +4,7 @@ import pefile
 import os
 import struct
 import logging
+import hashlib
 
 i = 0
 API_LIST = []
@@ -63,7 +64,15 @@ def main():
 
     for section in pe2.sections:
         print(section.Name, "Virtual Address: ", hex(section.VirtualAddress), "Virtual Size: ",  hex(section.Misc_VirtualSize),
-                    "Raw data size: ", section.SizeOfRawData ) 
+                    "Raw data size: ", section.SizeOfRawData )
+
+        hash = hashlib.sha256()
+        byt3s = []
+        byt3s = pe2.sections[0].get_data() #read .text section append to byt3s 
+        print(byt3s)
+        #hash.update(byt3s)
+        
+        #print("hash is: {0}".format(hash.hexdigest()))
 
     # ---------------------------
     
