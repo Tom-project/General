@@ -86,6 +86,8 @@ def amsiCheck():
         if fHash!=fHash2:
             logger.alert("Memory Patching Detected! ")
             break
+        else:
+            print("Continuing. ")
         time.sleep(5)
     # ---------------------------
     
