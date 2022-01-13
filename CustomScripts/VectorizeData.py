@@ -69,10 +69,10 @@ def main():
         hash = hashlib.sha256()
         byt3s = []
         byt3s = pe2.sections[0].get_data() #read .text section append to byt3s 
-        print(byt3s)
-        #hash.update(byt3s)
+        #print(byt3s)
+        hash.update(byt3s)
         
-        #print("hash is: {0}".format(hash.hexdigest()))
+        print("hash is: {0}".format(hash.hexdigest()))
 
     # ---------------------------
     
