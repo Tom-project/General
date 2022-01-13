@@ -5,6 +5,7 @@ import os
 import struct
 import logging
 import hashlib
+import time
 
 i = 0
 API_LIST = []
@@ -59,20 +60,33 @@ def main():
     else:
         print(API_LIST)
 
+    amsiCheck()
     # --------------------------
+    
+def amsiCheck():
     pe2 = pefile.PE("C:\Windows\System32\\amsi.dll")
 
     for section in pe2.sections:
         print(section.Name, "Virtual Address: ", hex(section.VirtualAddress), "Virtual Size: ",  hex(section.Misc_VirtualSize),
                     "Raw data size: ", section.SizeOfRawData )
 
-    hash = hashlib.sha256()
     byt3s = []
     byt3s = pe2.sections[0].get_data() #read .text section append to byt3s 
+    hash = hashlib.sha256()
     hash.update(byt3s)
-    print("hash is: {0}".format(hash.hexdigest()))
-
-    if
+    fHash = hash.hexdigest()
+    print("hash is: {0}".format(fHash))
+    
+    while(1):
+        hash = hashlib.sha256()
+        byt3s = pe2.sections[0].get_data() #read .text section append to byt3s 
+        hash.update(byt3s)
+        fHash2 = hash.hexdigest()
+        
+        if fHash!=fHash2:
+            logger.alert("Memory Patching Detected! ")
+            break
+        time.sleep(5)
     # ---------------------------
     
 
