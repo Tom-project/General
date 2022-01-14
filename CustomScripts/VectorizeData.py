@@ -1,5 +1,3 @@
-# from typing import Annotated
-#from re import A
 import pefile
 import os
 import struct
@@ -27,7 +25,7 @@ ch.setFormatter(formatter)
 
 # add ch to logger
 logger.addHandler(ch)
-    # ---------------------------------------------
+# ---------------------------------------------
 
 
 def main():
@@ -61,6 +59,7 @@ def main():
         print(API_LIST)
 
     amsiCheck()
+    print("finishing main..........")
     # --------------------------
     
 def amsiCheck():
