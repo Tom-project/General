@@ -31,9 +31,12 @@ logger.addHandler(ch)
 
 
 
-def extractResults():
+def extractResults(dataArr2,dataArr):
     header = ['LogData', 'Occur?', 'priority']
-    data = ['','','']
+    data =[
+            [dataArr2],
+            [dataArr]
+          ]
     f = open('C:\Users\\thoma\Documents\dataset.csv', 'w')
 
     # create the csv writer
@@ -70,12 +73,16 @@ def APIPull():
         print("GetProcAddress Found")
         x = API_LIST.index("GetProcAddress")
         logger.info(API_LIST[x])
-        x = input("Would you like to see the rest of the list? ")
-        if x == "y":
+        b = input("Would you like to see the rest of the list? ")
+        if b == "y":
             print(API_LIST)
+        dataArr2 = [API_LIST[x],"yes","medium"]
+        extractResults(dataArr2)
 
     else:
         print("NOT FOUND", API_LIST)
+        dataArr2 = ["N/A","no","low"]
+        extractResults(dataArr2)
 
 
 def amsiCheck():
@@ -92,17 +99,25 @@ def amsiCheck():
     fHash = hash.hexdigest()
     print("hash is: {0}".format(fHash))
     
-    while(1):
+    i = 0
+    while(i<20):
         hash = hashlib.sha256()
         byt3s = pe2.sections[0].get_data() #read .text section append to byt3s 
         hash.update(byt3s)
         fHash2 = hash.hexdigest()
         
         if fHash!=fHash2:
-            logger.alert("Memory Patching Detected! ")
+            x = logger.alert("Memory Patching Detected! ")
+            dataArr = [x,"yes","high"] 
+            extractResults(dataArr)
+            i = i + 1
             break
         else:
             print("Continuing. ")
+            i = i + 1
+            if (i == 20):
+                dataArr = ["Hash Not Changed","no","low"] 
+                extractResults(dataArr)
         time.sleep(5)
     # ---------------------------
 
