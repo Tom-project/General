@@ -37,7 +37,7 @@ def extractResults(dataArr2,dataArr):
             [dataArr2],
             [dataArr]
           ]
-    with open("C:\Users\\thoma\Documents\dataset.csv", "w") as f:
+    with open(r"C:\Users\\thoma\Documents\dataset.csv", "w") as f:
         # create the csv writer
         writer = csv.writer(f)
 
