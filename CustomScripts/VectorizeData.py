@@ -37,17 +37,15 @@ def extractResults(dataArr2,dataArr):
             [dataArr2],
             [dataArr]
           ]
-    f = open('C:\Users\\thoma\Documents\dataset.csv', 'w')
+    with open("C:\Users\\thoma\Documents\dataset.csv", "w") as f:
+        # create the csv writer
+        writer = csv.writer(f)
 
-    # create the csv writer
-    writer = csv.writer(f)
+        # write a row to the csv file
+        writer.writerow(header)
+        writer.writerows(data)
 
-    # write a row to the csv file
-    writer.writerow(header)
-    writer.writerows(data)
 
-    # close the file
-    f.close()
 
 
 def APIPull():
