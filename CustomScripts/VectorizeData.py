@@ -29,8 +29,6 @@ ch.setFormatter(formatter)
 logger.addHandler(ch)
 # ---------------------------------------------
 
-
-
 def extractResults(dataArr2,dataArr):
     header = ['LogData', 'Occur?', 'priority']
     data =[
@@ -44,8 +42,6 @@ def extractResults(dataArr2,dataArr):
         # write a row to the csv file
         writer.writerow(header)
         writer.writerows(data)
-
-
 
 
 def APIPull():
@@ -69,8 +65,8 @@ def APIPull():
     # Looking for Win API call of interest
     if ("GetProcAddress" in API_LIST):
         print("GetProcAddress Found")
-        x = API_LIST.index("GetProcAddress")
-        logger.info(API_LIST[x])
+        x = API_LIST.index("GetProcAddress") # Locate where in the array the API call is
+        logger.info(API_LIST[x]) # Append to log file
         b = input("Would you like to see the rest of the list? ")
         if b == "y":
             print(API_LIST)
