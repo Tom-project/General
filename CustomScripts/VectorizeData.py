@@ -4,8 +4,10 @@ import struct
 import logging
 import hashlib
 import time
+import threading
+import csv
 
-i = 0
+#i = 0
 API_LIST = []
 File = "C:\Windows\System32\WindowsPowerShell\\v1.0\powershell.exe"
 target = pefile.PE(File)
@@ -28,7 +30,24 @@ logger.addHandler(ch)
 # ---------------------------------------------
 
 
-def main():
+
+def extractResults():
+    header = ['LogData', 'Occur?', 'priority']
+    data = ['','','']
+    f = open('C:\Users\\thoma\Documents\dataset.csv', 'w')
+
+    # create the csv writer
+    writer = csv.writer(f)
+
+    # write a row to the csv file
+    writer.writerow(header)
+    writer.writerows(data)
+
+    # close the file
+    f.close()
+
+
+def APIPull():
     i = 0
     # Pulls APIs from PE
     for entry in target.DIRECTORY_ENTRY_IMPORT:
@@ -56,12 +75,9 @@ def main():
             print(API_LIST)
 
     else:
-        print(API_LIST)
+        print("NOT FOUND", API_LIST)
 
-    amsiCheck()
-    print("finishing main..........")
-    # --------------------------
-    
+
 def amsiCheck():
     pe2 = pefile.PE("C:\Windows\System32\\amsi.dll")
 
@@ -89,8 +105,22 @@ def amsiCheck():
             print("Continuing. ")
         time.sleep(5)
     # ---------------------------
-    
 
+
+def main():
+    
+    #Define Threads
+    th = threading.Thread(target=APIPull())
+    th2 = threading.Thread(target=amsiCheck())
+    
+    # Start threads
+    th.start()
+    th2.start()
+
+    # Wait for threads to finish
+    th.join()
+    th2.join()
+    # --------------------------
 
 if __name__ == "__main__":
     main()
