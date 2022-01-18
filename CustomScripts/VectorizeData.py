@@ -6,6 +6,8 @@ import hashlib
 import time
 import threading
 import csv
+import datetime
+#import pandas as pd
 
 #i = 0
 API_LIST = []
@@ -29,22 +31,34 @@ ch.setFormatter(formatter)
 logger.addHandler(ch)
 # ---------------------------------------------
 
-def extractResults(dataArr2,dataArr):
-    header = ['LogData', 'Occur?', 'priority']
+MalIdentifier = int(input("Is this run using a malicious program? 1 = Yes, 0 = No "))
+
+
+def extractResults(df, df2): 
+    #df["Data"] = df[0]
+    #df["Action"] = df[1]
+    #df["Priority"] = df[2]
+    #df2.to_csv(r'C:\\Users\\thoma\Documents\dataset.csv', index=True)
+    #df.to_csv(r'C:\\Users\\thoma\Documents\dataset.csv', index=False)
+
+    #header = ['Data', 'Action', 'Priority', 'Malicious'] # Only needed when in write mode to create a new file
     data =[
-            [dataArr2],
-            [dataArr]
+            [df[0],df[1],df[2],df[3]],
+            [df2[0],df2[1],df2[2],df[3]]
           ]
-    with open(r"C:\\Users\\thoma\Documents\dataset.csv", "w") as f:
+    with open(r"C:\Users\\thoma\Documents\dataset.csv", "a") as f: 
         # create the csv writer
         writer = csv.writer(f)
 
         # write a row to the csv file
-        writer.writerow(header)
+        #writer.writerow(header)
         writer.writerows(data)
+    
+
 
 
 def APIPull():
+    print("API Pull is running at time: " + str(int(time.time())) + " seconds.")
     i = 0
     # Pulls APIs from PE
     for entry in target.DIRECTORY_ENTRY_IMPORT:
@@ -62,24 +76,33 @@ def APIPull():
         API_LIST[i] = API_LIST[i].decode('utf-8')
         i = i + 1 
 
-    # Looking for Win API call of interest
-    if ("GetProcAddress" in API_LIST):
-        print("GetProcAddress Found")
-        x = API_LIST.index("GetProcAddress") # Locate where in the array the API call is
-        logger.info(API_LIST[x]) # Append to log file
-        b = input("Would you like to see the rest of the list? ")
-        if b == "y":
-            print(API_LIST)
-        dataArr2 = [API_LIST[x],"yes","medium"]
-        extractResults(dataArr2)
+    i = 0
+    while(i < 20):
+        
+        if ("GetProcAddress" in API_LIST): # Looking for Win API call of interest
+            #print("GetProcAddress Found")
+            x = API_LIST.index("GetProcAddress")
+            logger.info(API_LIST[x])
+            #b = input("Would you like to see the rest of the list? ")
+            #if b == "y":
+                #print(API_LIST)
+            global df 
+            df = [API_LIST[x],"1","medium",MalIdentifier]
+            break
+            
 
-    else:
-        print("NOT FOUND", API_LIST)
-        dataArr2 = ["N/A","no","low"]
-        extractResults(dataArr2)
+        else:
+            i = i + 1
+            if (i == 20):
+                print("NOT FOUND", API_LIST)
+                df = ["N/A","0","low",MalIdentifier]
+        time.sleep(5)
+            
 
 
 def amsiCheck():
+    print("AMSI Check is running at time: " + str(int(time.time())) + " seconds.")
+     
     pe2 = pefile.PE("C:\Windows\System32\\amsi.dll")
 
     for section in pe2.sections:
@@ -94,7 +117,7 @@ def amsiCheck():
     print("hash is: {0}".format(fHash))
     
     i = 0
-    while(i<20):
+    while(i<3):
         hash = hashlib.sha256()
         byt3s = pe2.sections[0].get_data() #read .text section append to byt3s 
         hash.update(byt3s)
@@ -102,16 +125,15 @@ def amsiCheck():
         
         if fHash!=fHash2:
             x = logger.alert("Memory Patching Detected! ")
-            dataArr = [x,"yes","high"] 
-            extractResults(dataArr)
-            i = i + 1
+            df2 = [x,"1","high"] 
+            extractResults(df, df2)
             break
         else:
             print("Continuing. ")
             i = i + 1
-            if (i == 20):
-                dataArr = ["Hash Not Changed","no","low"] 
-                extractResults(dataArr)
+            if (i == 2):
+                df2 = ["Hash Not Changed","0","low"] 
+                extractResults(df, df2)
         time.sleep(5)
     # ---------------------------
 
