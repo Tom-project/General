@@ -24,3 +24,12 @@ This is a script that uses the binary search algorithm to enumerate information 
 
 ## SQLBinaryTimebased
 This is a script that uses the binary search algorithm to enumerate information from a server vulnerable to blind sql injection via a time based attack.
+
+## ExtractWin32APICalls.py
+This extracts APIs from PE on a Windows machine.
+
+## intOverflow.c
+This is a exploit in c to target an application vulnerable to an integer overflow
+
+## VectorizeData.py
+A python script to pull API data and a hash of .text section of amsi.dll
