@@ -20,12 +20,6 @@
 #include <linux/cred.h>
 #include <linux/unistd.h>
 
-//#include <stdio.h>
-//#include <stdlib.h>
-
-
-
-//#define SHELL "/bin/sh"
 
 
 MODULE_DESCRIPTION("Example module hooking mkdir() via ftrace");
