@@ -1,3 +1,4 @@
+from re import M
 import pefile
 import os
 import struct
@@ -41,12 +42,12 @@ def extractResults(df, df2):
     #df2.to_csv(r'C:\\Users\\thoma\Documents\dataset.csv', index=True)
     #df.to_csv(r'C:\\Users\\thoma\Documents\dataset.csv', index=False)
 
-    #header = ['Data', 'Action', 'Priority', 'Malicious'] # Only needed when in write mode to create a new file
+    #header = ['Event', 'Action', 'Priority', 'Malicious', 'EntryPoint', 'VirtualMemSize', 'RawDataSize'] # Only needed when in write mode to create a new file
     data =[
             [df[0],df[1],df[2],df[3]],
-            [df2[0],df2[1],df2[2],df[3]]
+            [df2[0],df2[1],df2[2],df2[3],df2[4],df2[5],df2[6]]
           ]
-    with open(r"C:\Users\\thoma\Documents\dataset.csv", "a") as f: 
+    with open(r"C:\\Users\\thoma\Documents\dataset.csv", "a") as f: 
         # create the csv writer
         writer = csv.writer(f)
 
@@ -87,7 +88,7 @@ def APIPull():
             #if b == "y":
                 #print(API_LIST)
             global df 
-            df = [API_LIST[x],"1","medium",MalIdentifier]
+            df = ["GetProcAddress Found!","1","medium",MalIdentifier]
             break
             
 
@@ -95,7 +96,7 @@ def APIPull():
             i = i + 1
             if (i == 20):
                 print("NOT FOUND", API_LIST)
-                df = ["N/A","0","low",MalIdentifier]
+                df = ["GetProcAddress NOT FOUND","0","low",MalIdentifier]
         time.sleep(5)
             
 
@@ -114,10 +115,18 @@ def amsiCheck():
     hash = hashlib.sha256()
     hash.update(byt3s)
     fHash = hash.hexdigest()
-    print("hash is: {0}".format(fHash))
+    #print("hash is ------------:",pe2.sections[0].Name, "{0}".format(fHash))
+    EntryPoint = pe2.sections[0].VirtualAddress
+    VirtualMemSize = pe2.sections[0].Misc_VirtualSize
+    RawDataSize = pe2.sections[0].SizeOfRawData
+
+    print("Entry point is: ", EntryPoint)
+    print("v mem is: ", VirtualMemSize)
+    print("raw data is: ", RawDataSize)
     
     i = 0
-    while(i<3):
+    d=0
+    while(i<21):
         hash = hashlib.sha256()
         byt3s = pe2.sections[0].get_data() #read .text section append to byt3s 
         hash.update(byt3s)
@@ -125,14 +134,22 @@ def amsiCheck():
         
         if fHash!=fHash2:
             x = logger.alert("Memory Patching Detected! ")
-            df2 = [x,"1","high"] 
+            df2 = [x,"1","high", MalIdentifier, EntryPoint, VirtualMemSize, RawDataSize]
             extractResults(df, df2)
             break
+        
         else:
             print("Continuing. ")
+            #print("hash of .text is: {0}".format(fHash))
+            #byt3s = pe2.sections[d].get_data() #read all sections append to byt3s 
+            #hash.update(byt3s)
+            #fHash3 = hash.hexdigest()
+            #print("hash is:",pe2.sections[d].Name, "{0}".format(fHash3))
+            #d=d+1 #eventually reaches end of pe2.sections array - needs a fix
             i = i + 1
-            if (i == 2):
-                df2 = ["Hash Not Changed","0","low"] 
+
+            if (i > 2):
+                df2 = ["Memory Patching NOT Detected","0","low", MalIdentifier, EntryPoint, VirtualMemSize, RawDataSize] 
                 extractResults(df, df2)
         time.sleep(5)
     # ---------------------------
