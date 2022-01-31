@@ -45,7 +45,7 @@ def hashFinder():
     fHash = hash.hexdigest()
     return fHash
 
-def extractResults(df, df2): 
+def extractResults(df, df2):
     #df["Data"] = df[0]
     #df["Action"] = df[1]
     #df["Priority"] = df[2]
@@ -57,7 +57,7 @@ def extractResults(df, df2):
             [df[0], df[1], df[2], df[3], df[4], df[5], df[6], df[7]],
             [df2[0], df2[1], df2[2], df2[3], df2[4], df2[5], df2[6], df2[7]]
           ]
-    with open(r"C:\\Users\\thoma\Documents\dataset2.csv", "a") as f: 
+    with open(r"C:\\Users\\thoma\Documents\\ExploitDevelopment\dataset2.csv", "a") as f: 
         # create the csv writer
         writer = csv.writer(f)
 
