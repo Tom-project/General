@@ -52,12 +52,12 @@ def extractResults(df, df2):
     #df2.to_csv(r'C:\\Users\\thoma\Documents\dataset.csv', index=True)
     #df.to_csv(r'C:\\Users\\thoma\Documents\dataset.csv', index=False)
 
-    #header = ['Event', 'Action', 'Priority', 'Malicious', 'EntryPoint', 'VirtualMemSize', 'RawDataSize'] # Only needed when in write mode to create a new file
+    #header = ['Event', 'Action', 'Priority', 'Malicious', 'EntryPoint', 'VirtualMemSize', 'RawDataSize', 'HashChange'] # Only needed when in write mode to create a new file
     data =[
-            [df[0], df[1], df[2], df[3], df[4], df[5], df[6], df[7]],
-            [df2[0], df2[1], df2[2], df2[3], df2[4], df2[5], df2[6], df2[7]]
+            [df[0], df[1], df[2], df[3], df[4], df[5], df[6]],
+            [df2[0], df2[1], df2[2], df2[3], df2[4], df2[5], df2[6]]
           ]
-    with open(r"C:\\Users\\thoma\Documents\\ExploitDevelopment\dataset2.csv", "a") as f: 
+    with open(r"C:\\Users\\thoma\Documents\\ExploitDevelopment\dataset4.csv", "a") as f: 
         # create the csv writer
         writer = csv.writer(f)
 
@@ -104,7 +104,7 @@ def APIPull():
                 #print(API_LIST)
             """
             global df 
-            df = ["GetProcAddress Found!","1","medium",MalIdentifier, EntryPoint, VirtualMemSize, RawDataSize, fHash]
+            df = [1,"medium",MalIdentifier, EntryPoint, VirtualMemSize, RawDataSize, 0]
             break
             
 
@@ -112,7 +112,7 @@ def APIPull():
             i = i + 1
             if (i == 20):
                 print("NOT FOUND", API_LIST)
-                df = ["GetProcAddress NOT FOUND","0","low",MalIdentifier, EntryPoint, VirtualMemSize, RawDataSize, fHash]
+                df = [0,"low",MalIdentifier, EntryPoint, VirtualMemSize, RawDataSize, 0]
         time.sleep(5)
             
 
@@ -136,7 +136,7 @@ def amsiCheck():
         fHash2 = hashFinder()
         if fHash!=fHash2:
             x = logger.alert("Memory Patching Detected! ")
-            df2 = [x,"1","high", MalIdentifier, EntryPoint, VirtualMemSize, RawDataSize, fHash]
+            df2 = [1,"high", MalIdentifier, EntryPoint, VirtualMemSize, RawDataSize, 1]
             extractResults(df, df2)
             break
         
@@ -149,7 +149,7 @@ def amsiCheck():
             i = i + 1
             
             if (i > 2): #if (i == 21):
-                df2 = ["Memory Patching NOT Detected","0","low", MalIdentifier, EntryPoint, VirtualMemSize, RawDataSize, fHash] 
+                df2 = [0,"low", MalIdentifier, EntryPoint, VirtualMemSize, RawDataSize, 0] 
                 extractResults(df, df2)
                 #break
         time.sleep(5)
