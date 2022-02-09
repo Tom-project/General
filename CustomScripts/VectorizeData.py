@@ -1,20 +1,16 @@
 from re import M
 import pefile
-import peutils
-import os
-import struct
+from os.path import exists
 import logging
 import hashlib
 import time
 import threading
 import csv
-import datetime
-#import pandas as pd
 
-#i = 0
 API_LIST = []
 File = "C:\Windows\System32\WindowsPowerShell\\v1.0\powershell.exe"
 pe = pefile.PE(File)
+dataset = r"C:\\Users\\thoma\Documents\\ExploitDevelopment\dataset4.csv"
 
 
 # ------------ Initialize Log file ------------
@@ -34,7 +30,7 @@ ch.setFormatter(formatter)
 logger.addHandler(ch)
 # ---------------------------------------------
 
-MalIdentifier = int(input("Is this run using a malicious program? 1 = Yes, 0 = No "))
+Label = int(input("Is this run using a malicious program? 1 = Yes, 0 = No "))
 
 def hashFinder():
     pe2 = pefile.PE("C:\Windows\System32\\amsi.dll")
@@ -45,33 +41,35 @@ def hashFinder():
     fHash = hash.hexdigest()
     return fHash
 
-def extractResults(df, df2):
-    #df["Data"] = df[0]
-    #df["Action"] = df[1]
-    #df["Priority"] = df[2]
-    #df2.to_csv(r'C:\\Users\\thoma\Documents\dataset.csv', index=True)
-    #df.to_csv(r'C:\\Users\\thoma\Documents\dataset.csv', index=False)
+def csvValidator():
+    if exists(dataset):
+        main()
+    else:
+        header = ['Event', 'Action', 'Priority', 'Label', 'EntryPoint', 'VirtualMemSize', 'RawDataSize', 'HashChange']
+        with open(dataset, "a") as f: 
+            #create the csv writer
+            writer = csv.writer(f)
+            writer.writerow(header)
+        main()
 
-    #header = ['Event', 'Action', 'Priority', 'Malicious', 'EntryPoint', 'VirtualMemSize', 'RawDataSize', 'HashChange'] # Only needed when in write mode to create a new file
+
+def extractResults(df, df2): 
     data =[
             [df[0], df[1], df[2], df[3], df[4], df[5], df[6]],
             [df2[0], df2[1], df2[2], df2[3], df2[4], df2[5], df2[6]]
           ]
-    with open(r"C:\\Users\\thoma\Documents\\ExploitDevelopment\dataset4.csv", "a") as f: 
+    with open(dataset, "a") as f: 
         # create the csv writer
         writer = csv.writer(f)
-
         # write a row to the csv file
-        #writer.writerow(header)
         writer.writerows(data)
     
-
 
 
 def APIPull():
     print("API Pull is running at time: " + str(int(time.time())) + " seconds.")
     i = 0
-    fHash = hashFinder()
+    #fHash = hashFinder()
 
     # Pulls APIs from PE
     for entry in pe.DIRECTORY_ENTRY_IMPORT:
@@ -104,7 +102,7 @@ def APIPull():
                 #print(API_LIST)
             """
             global df 
-            df = [1,"medium",MalIdentifier, EntryPoint, VirtualMemSize, RawDataSize, 0]
+            df = [1,"medium",Label, EntryPoint, VirtualMemSize, RawDataSize, 0]
             break
             
 
@@ -112,7 +110,7 @@ def APIPull():
             i = i + 1
             if (i == 20):
                 print("NOT FOUND", API_LIST)
-                df = [0,"low",MalIdentifier, EntryPoint, VirtualMemSize, RawDataSize, 0]
+                df = [0,"low",Label, EntryPoint, VirtualMemSize, RawDataSize, 0]
         time.sleep(5)
             
 
@@ -134,9 +132,10 @@ def amsiCheck():
     i = 0
     while(i<21):
         fHash2 = hashFinder()
+        print(fHash, "\n", fHash2)
         if fHash!=fHash2:
-            x = logger.alert("Memory Patching Detected! ")
-            df2 = [1,"high", MalIdentifier, EntryPoint, VirtualMemSize, RawDataSize, 1]
+            logger.alert("Memory Patching Detected! ")
+            df2 = [1,"high", Label, EntryPoint, VirtualMemSize, RawDataSize, 1]
             extractResults(df, df2)
             break
         
@@ -149,7 +148,7 @@ def amsiCheck():
             i = i + 1
             
             if (i > 2): #if (i == 21):
-                df2 = [0,"low", MalIdentifier, EntryPoint, VirtualMemSize, RawDataSize, 0] 
+                df2 = [0,"low", Label, EntryPoint, VirtualMemSize, RawDataSize, 0] 
                 extractResults(df, df2)
                 #break
         time.sleep(5)
@@ -172,4 +171,4 @@ def main():
     # --------------------------
 
 if __name__ == "__main__":
-    main()
+    csvValidator()
