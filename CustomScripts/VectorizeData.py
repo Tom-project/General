@@ -39,13 +39,14 @@ def hashFinder():
     hash = hashlib.sha256()
     hash.update(byt3s)
     fHash = hash.hexdigest()
-    return fHash
+    hashToInt = int(fHash, 16) #In order to utilise the hash in the dataset it needs to be an int.
+    return hashToInt
 
 def csvValidator():
     if exists(dataset):
         main()
     else:
-        header = ['Event', 'Action', 'Priority', 'Label', 'EntryPoint', 'VirtualMemSize', 'RawDataSize', 'HashChange']
+        header = ['Event', 'Action', 'Priority', 'Label', 'EntryPoint', 'VirtualMemSize', 'RawDataSize', 'HashChange','hash']
         with open(dataset, "a") as f: 
             #create the csv writer
             writer = csv.writer(f)
@@ -55,8 +56,8 @@ def csvValidator():
 
 def extractResults(df, df2): 
     data =[
-            [df[0], df[1], df[2], df[3], df[4], df[5], df[6]],
-            [df2[0], df2[1], df2[2], df2[3], df2[4], df2[5], df2[6]]
+            [df[0], df[1], df[2], df[3], df[4], df[5], df[6],df[7]],
+            [df2[0], df2[1], df2[2], df2[3], df2[4], df2[5], df2[6],df[7]]
           ]
     with open(dataset, "a") as f: 
         # create the csv writer
@@ -90,6 +91,7 @@ def APIPull():
     EntryPoint = pe.sections[0].VirtualAddress
     VirtualMemSize = pe.sections[0].Misc_VirtualSize
     RawDataSize = pe.sections[0].SizeOfRawData
+    fHash = hashFinder()
     i = 0
     while(i < 20):
         
@@ -102,7 +104,7 @@ def APIPull():
                 #print(API_LIST)
             """
             global df 
-            df = [1,"medium",Label, EntryPoint, VirtualMemSize, RawDataSize, 0]
+            df = [1,"medium",Label, EntryPoint, VirtualMemSize, RawDataSize, 0, fHash]
             break
             
 
@@ -110,7 +112,7 @@ def APIPull():
             i = i + 1
             if (i == 20):
                 print("NOT FOUND", API_LIST)
-                df = [0,"low",Label, EntryPoint, VirtualMemSize, RawDataSize, 0]
+                df = [0,"low",Label, EntryPoint, VirtualMemSize, RawDataSize, 0, fHash]
         time.sleep(5)
             
 
@@ -128,14 +130,15 @@ def amsiCheck():
     RawDataSize = pe2.sections[0].SizeOfRawData
 
     fHash = hashFinder()
+    
 
     i = 0
     while(i<21):
         fHash2 = hashFinder()
-        print(fHash, "\n", fHash2)
+        #print(fHash, "\n", fHash2)
         if fHash!=fHash2:
             logger.alert("Memory Patching Detected! ")
-            df2 = [1,"high", Label, EntryPoint, VirtualMemSize, RawDataSize, 1]
+            df2 = [1,"high", Label, EntryPoint, VirtualMemSize, RawDataSize, 1, fHash]
             extractResults(df, df2)
             break
         
@@ -148,7 +151,7 @@ def amsiCheck():
             i = i + 1
             
             if (i > 2): #if (i == 21):
-                df2 = [0,"low", Label, EntryPoint, VirtualMemSize, RawDataSize, 0] 
+                df2 = [0,"low", Label, EntryPoint, VirtualMemSize, RawDataSize, 0, fHash] 
                 extractResults(df, df2)
                 #break
         time.sleep(5)
