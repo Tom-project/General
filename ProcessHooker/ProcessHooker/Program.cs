@@ -31,6 +31,11 @@ namespace ProcessHooker
         [DllImport("kernel32.dll", EntryPoint = "RtlMoveMemory", SetLastError = false)]
         static extern void MoveMemory(IntPtr dest, IntPtr src, int size);
         */
+        static void csvchecker()
+        {
+
+
+        }
 
         int findPshellProcess()
         {
@@ -63,10 +68,8 @@ namespace ProcessHooker
           
         }
 
-        static void Main(string[] args)
+        static void handlehooking()
         {
-            Console.WriteLine("Is this a malicious program? Yes = 1 No = 0");
-            string Label = Console.ReadLine();
             Hook myProcess = new Hook(); //create object to get powerhsell pid
 
             myProcess.findPshellProcess();
@@ -82,12 +85,16 @@ namespace ProcessHooker
 
         }
 
-        static void csvchecker()
+        static void Main(string[] args)
         {
-
+            Console.WriteLine("Is this a malicious program? Yes = 1 No = 0");
+            string Label = Console.ReadLine();
+            
+            handlehooking();
 
         }
 
+        
     
     }
 }
