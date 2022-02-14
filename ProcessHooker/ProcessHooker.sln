@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32112.339
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProcessHooker", "ProcessHooker\ProcessHooker.csproj", "{834525BE-6A0D-42C2-9B64-C27F099CBB42}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{834525BE-6A0D-42C2-9B64-C27F099CBB42}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{834525BE-6A0D-42C2-9B64-C27F099CBB42}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{834525BE-6A0D-42C2-9B64-C27F099CBB42}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{834525BE-6A0D-42C2-9B64-C27F099CBB42}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {212DB24A-C3BD-477C-82F7-66F0A40C2208}
+	EndGlobalSection
+EndGlobal
