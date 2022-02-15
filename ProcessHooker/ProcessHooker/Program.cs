@@ -85,6 +85,21 @@ namespace ProcessHooker
 
         }
 
+        static void sectionFinder()
+        {
+            PeHeaderReader onDiskAmsiReader = new PeHeaderReader("C:\Windows\System32\\amsi.dll");
+            PeHeaderReader.IMAGE_SECTION_HEADER[] onDiskAmsiSection = onDiskAmsiReader.ImageSectionHeaders;
+
+            if(onDiskAmsiSection[count].Equals(".text"))
+            {
+                int rawdata = (int)onDiskAmsiSection[count].rawdata;
+                int sizeofrawdata = (int)onDiskAmsiSection[count].sizeofrawdata;
+            }
+
+            
+
+        }
+
         static void Main(string[] args)
         {
             Console.WriteLine("Is this a malicious program? Yes = 1 No = 0");
