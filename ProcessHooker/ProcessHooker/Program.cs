@@ -624,14 +624,6 @@ namespace ProcessHooker
         //void WaitForProcess()
         static void startWatch_EventArrived(object sender, EventArrivedEventArgs e)
         {
-            ManagementEventWatcher startWatch = new ManagementEventWatcher(new WqlEventQuery("SELECT * FROM Win32_ProcessStartTrace"));
-            
-            startWatch.EventArrived += new EventArrivedEventHandler(startWatch_EventArrived);
-            startWatch.Start();
-       // }
-
-        //static void startWatch_EventArrived(object sender, EventArrivedEventArgs e)
-        //{
             string processName = (string)e.NewEvent.Properties["ProcessName"].Value;
             if (string.Equals(processName, "powershell.exe"));
                 {
@@ -657,28 +649,13 @@ namespace ProcessHooker
             int PROCESS_ALL_ACCESS = (0x1F0FFF);
             IntPtr myHandle = OpenProcess(PROCESS_ALL_ACCESS, false, pid); //Handle to new PowerShell process
 
-
-
-
             CloseHandle(myHandle);
 
         }
 
         static string OnDiskAnalyzer()
         {
-            //namespace.classname YourClass = new namespace.classname();
-
-            //_3DViewerControls.Data.PeHeaderReader test = new PeHeaderReader();
-
-            /*
-            using App; // at the beginning of your .cs file
-            MyClass myClass = new MyClass();
-            var v = myClass.myVariable; // defined in the App namespace
-            var stat = MyClass.StaticVariable;
-            */
-
-
-
+      
             PeHeaderReader onDiskAmsiReader = new PeHeaderReader("C:\\Windows\\System32\\amsi.dll");
             PeHeaderReader.IMAGE_SECTION_HEADER[] onDiskAmsiSection = onDiskAmsiReader.ImageSectionHeaders;
             byte[] onDiskAmsi = onDiskAmsiReader.allBytes; //read entire string of bytes of amsi file
@@ -701,7 +678,10 @@ namespace ProcessHooker
                 }
             return "error. Cant find .text section";
         }
+        static void InMemoryAnalyzer()
+        {
 
+        }
         static String calculateHash(byte[] bytesToHash) //takes byte array (and calls it bytesToHash) to hash (from Analyzer functions)
         {
             MD5 md5CheckSum = MD5.Create();
@@ -709,17 +689,17 @@ namespace ProcessHooker
             return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
         }
 
-        static void InMemoryAnalyzer()
-        {
-
-        }
-
         static void Main(string[] args)
         {
             Console.WriteLine("Is this a malicious program? Yes = 1 No = 0");
             string Label = Console.ReadLine();
-            
-            handlehooking();
+
+            ManagementEventWatcher startWatch = new ManagementEventWatcher(new WqlEventQuery("SELECT * FROM Win32_ProcessStartTrace"));
+
+            startWatch.EventArrived += new EventArrivedEventHandler(startWatch_EventArrived);
+            startWatch.Start();
+
+            //handlehooking();
 
         }
 
