@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "ProjectMap": {
+    "834525be-6a0d-42c2-9b64-c27f099cbb42": {
+      "ProjectGuid": "834525be-6a0d-42c2-9b64-c27f099cbb42",
+      "DisplayName": "ProcessHooker",
+      "ColorIndex": 0
+    }
+  },
+  "NextColorIndex": 1
+}

@@ -13,3 +13,11 @@ C:\Users\Dev1\source\repos\ProcessHooker\ProcessHooker\obj\Debug\net6.0\ProcessH
 C:\Users\Dev1\source\repos\ProcessHooker\ProcessHooker\obj\Debug\net6.0\ref\ProcessHooker.dll
 C:\Users\Dev1\source\repos\ProcessHooker\ProcessHooker\obj\Debug\net6.0\ProcessHooker.pdb
 C:\Users\Dev1\source\repos\ProcessHooker\ProcessHooker\obj\Debug\net6.0\ProcessHooker.genruntimeconfig.cache
+C:\Users\Dev1\Documents\GitHub\ProcessHooker\ProcessHooker\obj\Debug\net6.0\ProcessHooker.csproj.AssemblyReference.cache
+C:\Users\Dev1\Documents\GitHub\ProcessHooker\ProcessHooker\obj\Debug\net6.0\ProcessHooker.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Dev1\Documents\GitHub\ProcessHooker\ProcessHooker\obj\Debug\net6.0\ProcessHooker.AssemblyInfoInputs.cache
+C:\Users\Dev1\Documents\GitHub\ProcessHooker\ProcessHooker\obj\Debug\net6.0\ProcessHooker.AssemblyInfo.cs
+C:\Users\Dev1\Documents\GitHub\ProcessHooker\ProcessHooker\obj\Debug\net6.0\ProcessHooker.csproj.CoreCompileInputs.cache
+C:\Users\Dev1\Documents\GitHub\ProcessHooker\ProcessHooker\obj\Debug\net6.0\ProcessHooker.dll
+C:\Users\Dev1\Documents\GitHub\ProcessHooker\ProcessHooker\obj\Debug\net6.0\ref\ProcessHooker.dll
+C:\Users\Dev1\Documents\GitHub\ProcessHooker\ProcessHooker\obj\Debug\net6.0\ProcessHooker.pdb
