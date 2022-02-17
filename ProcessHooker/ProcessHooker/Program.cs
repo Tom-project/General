@@ -4,16 +4,12 @@ using System.Diagnostics;
 using System.Management;
 using System.Collections.Generic;
 using System.IO;
-using _3DViewerControls.Data;
+using detection;
 using System.Security.Cryptography;
 
-namespace _3DViewerControls.Data
-{
 
-    /// <summary>
-    /// Reads in the header information of the Portable Executable format.
-    /// Provides information such as the date the assembly was compiled.
-    /// </summary>
+namespace detection
+{
     public class PeHeaderReader
     {
         #region File Header Structures
@@ -405,6 +401,7 @@ namespace _3DViewerControls.Data
         /// Image Section headers. Number of sections is in the file header.
         /// </summary>
         private IMAGE_SECTION_HEADER[] imageSectionHeaders;
+        public byte[] allBytes;
 
         #endregion Private Fields
 
@@ -432,13 +429,45 @@ namespace _3DViewerControls.Data
                     optionalHeader64 = FromBinaryReader<IMAGE_OPTIONAL_HEADER64>(reader);
                 }
 
-                imageSectionHeaders = new IMAGE_SECTION_HEADER[fileHeader.NumberOfSections]; //imagesectionheaders defined on line 406 as section header type, being assigned a vlue of the new header that has been read from the file and saved to fileHeader variable
+                imageSectionHeaders = new IMAGE_SECTION_HEADER[fileHeader.NumberOfSections];
                 for (int headerNo = 0; headerNo < imageSectionHeaders.Length; ++headerNo)
                 {
                     imageSectionHeaders[headerNo] = FromBinaryReader<IMAGE_SECTION_HEADER>(reader);
                 }
-
             }
+            allBytes = File.ReadAllBytes(filePath);
+        }
+
+
+        public PeHeaderReader(byte[] fileBytes)
+        {
+            // Read in the DLL or EXE and get the timestamp
+            using (MemoryStream stream = new MemoryStream(fileBytes, 0, fileBytes.Length))
+            {
+                BinaryReader reader = new BinaryReader(stream);
+                dosHeader = FromBinaryReader<IMAGE_DOS_HEADER>(reader);
+
+                // Add 4 bytes to the offset
+                stream.Seek(dosHeader.e_lfanew, SeekOrigin.Begin);
+
+                UInt32 ntHeadersSignature = reader.ReadUInt32();
+                fileHeader = FromBinaryReader<IMAGE_FILE_HEADER>(reader);
+                if (this.Is32BitHeader)
+                {
+                    optionalHeader32 = FromBinaryReader<IMAGE_OPTIONAL_HEADER32>(reader);
+                }
+                else
+                {
+                    optionalHeader64 = FromBinaryReader<IMAGE_OPTIONAL_HEADER64>(reader);
+                }
+
+                imageSectionHeaders = new IMAGE_SECTION_HEADER[fileHeader.NumberOfSections];
+                for (int headerNo = 0; headerNo < imageSectionHeaders.Length; ++headerNo)
+                {
+                    imageSectionHeaders[headerNo] = FromBinaryReader<IMAGE_SECTION_HEADER>(reader);
+                }
+            }
+
         }
 
         /// <summary>
@@ -559,7 +588,7 @@ namespace _3DViewerControls.Data
                 // Add in the number of seconds since 1970/1/1
                 returnValue = returnValue.AddSeconds(fileHeader.TimeDateStamp);
                 // Adjust to local timezone
-                returnValue += TimeZone.CurrentTimeZone.GetUtcOffset(returnValue);
+                returnValue += TimeZoneInfo.Local.GetUtcOffset(returnValue);
 
                 return returnValue;
             }
@@ -573,6 +602,13 @@ namespace ProcessHooker
 {
     class Hook
     {
+        public struct MODULEINFO
+        {
+            public IntPtr lpBaseOfDll;
+            public uint SizeOfImage;
+            public IntPtr EntryPoint;
+        }
+
         //implement required kernel32.dll functions 
         [DllImport("kernel32")]
         public static extern IntPtr LoadLibrary(string name);
@@ -588,6 +624,12 @@ namespace ProcessHooker
         [DllImport("kernel32.dll")]
         public static extern bool WriteProcessMemory(int hProcess, int lpBaseAddress, byte lpBuffer, int nSize, int lpNumberOfBytesWritten);
 
+        [DllImport("psapi.dll", SetLastError = true)]
+        public static extern bool GetModuleInformation(IntPtr hProcess,IntPtr hModule, out MODULEINFO lpmodinfo, uint cb);
+
+        [DllImport("kernel32.dll")]
+        public static extern bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, int dwSize, ref int lpNumberOfBytesRead);
+
         //[DllImport("C:\\Users\\Dev1\\source\\repos\\PEHeaderReader2\\PEHeaderReader2\\bin\\Release\\net6.0\\PEHeaderReader2.dll")]
         //public static extern PeHeaderReader(string filepath);
 
@@ -600,14 +642,6 @@ namespace ProcessHooker
         static extern void MoveMemory(IntPtr dest, IntPtr src, int size);
         */
 
-
-        static void csvchecker()
-        {
-
-
-        }
-
-        
         /*int findPshellProcess()
         {
             Process[] processlist = Process.GetProcessesByName("powershell");
@@ -621,14 +655,23 @@ namespace ProcessHooker
         }
         */
 
+
+
+        static void csvchecker()
+        {
+
+
+        }
+
         //void WaitForProcess()
         static void startWatch_EventArrived(object sender, EventArrivedEventArgs e)
         {
+            Console.WriteLine("[+] EventArrived function");
             string processName = (string)e.NewEvent.Properties["ProcessName"].Value;
-            if (string.Equals(processName, "powershell.exe"));
+            if (string.Equals(processName, "powershell.exe"))
                 {
                     Console.WriteLine("New PowerShell process started: ");
-                    startWatch.Stop();
+                    //startWatch.Stop();
 
                     Process[] processlist = Process.GetProcessesByName("powershell");
                     foreach (Process p in processlist)
@@ -641,34 +684,55 @@ namespace ProcessHooker
             
         }
 
-        static void handlehooking(int pid)
+        static string handlehooking(int pid)
         {
             //Hook myProcess = new findPshellProcess(); //create object of class hook
             //uint pid = myProcess.processlist[0].Id; //use object to get return value of powershell process id
-            
-            int PROCESS_ALL_ACCESS = (0x1F0FFF);
-            IntPtr myHandle = OpenProcess(PROCESS_ALL_ACCESS, false, pid); //Handle to new PowerShell process
+            Console.WriteLine("[+] HandleHooking called");
+            OnDiskAnalyzer();
 
-            CloseHandle(myHandle);
+            int PROCESS_ALL_ACCESS = (0x1F0FFF);
+            IntPtr myHandle = OpenProcess(PROCESS_ALL_ACCESS, true, pid); //Handle to new PowerShell process
+
+            if (myHandle != null)
+            {
+                string onDiskHash = OnDiskAnalyzer();
+                string inMemoryHash = InMemoryAnalyzer(pid, myHandle);
+
+                if (string.Equals(onDiskHash, inMemoryHash) == false)
+                {
+                    Console.WriteLine("[+] Memory Patching Detected in process: %d",pid);
+                    //write data to csv including hash in numeric terms, entry point for process, raw data size, etc
+
+                }
+                else
+                {
+                    Console.WriteLine("[+] Process has not been tampered with: %d", pid);
+                    //Write data to csv
+                }
+
+                CloseHandle(myHandle);
+            }
+            return "Error opening handle";
 
         }
 
         static string OnDiskAnalyzer()
         {
-      
+            Console.WriteLine("[+]Disk analyzer called");
             PeHeaderReader onDiskAmsiReader = new PeHeaderReader("C:\\Windows\\System32\\amsi.dll");
             PeHeaderReader.IMAGE_SECTION_HEADER[] onDiskAmsiSection = onDiskAmsiReader.ImageSectionHeaders;
             byte[] onDiskAmsi = onDiskAmsiReader.allBytes; //read entire string of bytes of amsi file
 
-            int count;
+            int i;
 
-            for (count = 0;count < onDiskAmsiSection.Length; count++)
+            for (i = 0;i < onDiskAmsiSection.Length; i++)
                 { 
-                    char[] sectionName = onDiskAmsiSection[count].Name;
+                    char[] sectionName = onDiskAmsiSection[i].Name;
                     if (sectionName.Equals(".text"))
                     {
-                        int RawData = (int)onDiskAmsiSection[count].PointerToRawData; // PointerToRawData is offset from the file's beginning to the section's data
-                        int SizeOfRawData = (int)onDiskAmsiSection[count].SizeOfRawData; 
+                        int RawData = (int)onDiskAmsiSection[i].PointerToRawData; // PointerToRawData is offset from the file's beginning to the section's data
+                        int SizeOfRawData = (int)onDiskAmsiSection[i].SizeOfRawData; 
                         byte[] onDiskAmsiCodeSection = new byte[SizeOfRawData];
                         Array.Copy(onDiskAmsi, RawData, onDiskAmsiCodeSection, 0, SizeOfRawData); //copy ondiskAmsi and rawdata into ondiskamsicodesection array up to sizeofrawdata
                         //string AmsiHash = calculateHash(onDiskAmsiCodeSection); // md5 Hash of ondisk Amsi.dll
@@ -678,9 +742,35 @@ namespace ProcessHooker
                 }
             return "error. Cant find .text section";
         }
-        static void InMemoryAnalyzer()
+        static string InMemoryAnalyzer(int pid, IntPtr myHandle)
         {
+            //Do something
+            Console.WriteLine("[+]Memory analyzer called");
+            int bytesRead = 0;
 
+            GetModuleInformation(myHandle, handleofmodule, pointertoMODULEINFO, Marshal.SizeOf(typeof(MODULEINFO)));
+
+            ReadProcessMemory(myHandle, amsiModuleHandle, inMemoryAmsiDLL, inMemoryAmsiDLL.Length, ref bytesRead);
+
+            PeHeaderReader.IMAGE_SECTION_HEADER[] InMemoryAmsiSection = InMemoryAmsiReader.ImageSectionHeaders;
+            byte[] InMemoryAmsi = InMemoryAmsiReader.allBytes; //read entire string of bytes of amsi file
+
+            int i;
+
+            for (i = 0; i < InMemoryAmsiSection.Length; i++)
+            {
+                char[] sectionName = InMemoryAmsiSection[i].Name;
+                if (sectionName.Equals(".text"))
+                {
+                    int VirtualAddr = (int)InMemoryAmsiSection[i].VirtualAddress; // VirtualAddress is 
+                    int SizeOfRawData = (int)InMemoryAmsiSection[i].SizeOfRawData;
+                    byte[] InMemoryAmsiCodeSection = new byte[SizeOfRawData];
+                    Array.Copy(InMemoryAmsi, VirtualAddr, InMemoryAmsiCodeSection, 0, SizeOfRawData); //copy 
+
+                    return calculateHash(InMemoryAmsiCodeSection);
+                }
+            }
+            return "error. Cant find .text section";
         }
         static String calculateHash(byte[] bytesToHash) //takes byte array (and calls it bytesToHash) to hash (from Analyzer functions)
         {
@@ -699,7 +789,10 @@ namespace ProcessHooker
             startWatch.EventArrived += new EventArrivedEventHandler(startWatch_EventArrived);
             startWatch.Start();
 
-            //handlehooking();
+            Thread.Sleep(10);
+            startWatch.Stop();
+
+            
 
         }
 
