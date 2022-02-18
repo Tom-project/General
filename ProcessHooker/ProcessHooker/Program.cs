@@ -664,7 +664,6 @@ namespace ProcessHooker
             if (string.Equals(processName, "powershell.exe"))
                 {
                     Console.WriteLine("New PowerShell process started: ");
-                    //startWatch.Stop();
 
                     Process[] processlist = Process.GetProcessesByName("powershell");
                     foreach (Process p in processlist)
@@ -813,15 +812,16 @@ namespace ProcessHooker
             Console.WriteLine("Is this a malicious program? Yes = 1 No = 0");
             string Label = Console.ReadLine();
 
-            ManagementEventWatcher startWatch = new ManagementEventWatcher(new WqlEventQuery("SELECT * FROM Win32_ProcessStartTrace"));
+            ManagementEventWatcher watcher = new ManagementEventWatcher(new WqlEventQuery("SELECT * FROM Win32_ProcessStartTrace"));
 
-            startWatch.EventArrived += new EventArrivedEventHandler(startWatch_EventArrived);
-            startWatch.Start();
+            watcher.EventArrived += new EventArrivedEventHandler(startWatch_EventArrived);
+            watcher.Start();
 
-            Thread.Sleep(10);
-            startWatch.Stop();
+            Console.WriteLine("Press any key to exit");
+            while (!Console.KeyAvailable) System.Threading.Thread.Sleep(50);
+            watcher.Stop();
 
-            
+
 
         }
 
