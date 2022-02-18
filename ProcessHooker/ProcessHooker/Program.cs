@@ -641,7 +641,7 @@ namespace ProcessHooker
         public static extern bool EnumProcessModules(IntPtr hProcess, [Out] IntPtr lphModule,UInt32 cb, [MarshalAs(UnmanagedType.U4)] out UInt32 lpcbNeeded);
 
         [DllImport("psapi.dll")]
-        static extern uint GetModuleFileNameEx(IntPtr hProcess, IntPtr hModule,[Out] string[] lpBaseName, [In][MarshalAs(UnmanagedType.U4)] int nSize);
+        static extern uint GetModuleFileNameEx(IntPtr hProcess, IntPtr hModule,[Out] StringBuilder lpBaseName, [In][MarshalAs(UnmanagedType.U4)] int nSize);
 
 
 
@@ -659,7 +659,7 @@ namespace ProcessHooker
         
         static void startWatch_EventArrived(object sender, EventArrivedEventArgs e)
         {
-            Console.WriteLine("[+] EventArrived function");
+            //Console.WriteLine("[+] EventArrived function");
             string processName = (string)e.NewEvent.Properties["ProcessName"].Value;
             if (string.Equals(processName, "powershell.exe"))
                 {
@@ -668,7 +668,7 @@ namespace ProcessHooker
                     Process[] processlist = Process.GetProcessesByName("powershell");
                     foreach (Process p in processlist)
                     {
-                        Console.WriteLine("Process: {0} ID: {1}", p.ProcessName, p.Id);
+                        Console.WriteLine("Process Name: {0} Process ID: {1}", p.ProcessName, p.Id);
                     }
                     IntegrityCheck(processlist[0].Id); //hook into the new powershell process for monitoring
                 }
@@ -679,7 +679,6 @@ namespace ProcessHooker
         static void IntegrityCheck(int pid)
         {
             Console.WriteLine("[+] IntegrityCheck called");
-            OnDiskAnalyzer();
 
             int PROCESS_ALL_ACCESS = (0x1F0FFF);
             IntPtr myHandle = OpenProcess(PROCESS_ALL_ACCESS, true, pid); //Handle to new PowerShell process
@@ -688,16 +687,18 @@ namespace ProcessHooker
             string onDiskHash = OnDiskAnalyzer();
             string inMemoryHash = InMemoryAnalyzer(myHandle);
 
-            if (string.Equals(onDiskHash, inMemoryHash) == false)
+            Console.WriteLine("[INFO] On Disk: {0} \n In memory is: {1}", onDiskHash, inMemoryHash);
+
+            if (inMemoryHash.Equals(onDiskHash) ==  false)
             {
-                Console.WriteLine("[+] Memory Patching Detected in process: %d",pid);
+                Console.WriteLine("[+] Memory Patching Detected in process: {0}",pid);
                 //write data to csv including hash in numeric terms, entry point for process, raw data size, etc
                 CloseHandle(myHandle);
                 
             }
             else
             {
-                Console.WriteLine("[+] Process has not been tampered with: %d", pid);
+                Console.WriteLine("[+] Process has not been tampered with: {0}", pid);
                 //Write data to csv
                 CloseHandle(myHandle);
                 
@@ -706,8 +707,8 @@ namespace ProcessHooker
 
         static string OnDiskAnalyzer()
         {
-            Console.WriteLine("[+]Disk analyzer called");
-            PeHeaderReader onDiskAmsiReader = new PeHeaderReader("C:\\Windows\\System32\\amsi.dll");
+            Console.WriteLine("[+] Disk analyzer called");
+            PeHeaderReader onDiskAmsiReader = new PeHeaderReader("C:/Windows/System32/amsi.dll");
             PeHeaderReader.IMAGE_SECTION_HEADER[] onDiskAmsiSection = onDiskAmsiReader.ImageSectionHeaders;
             byte[] onDiskAmsi = onDiskAmsiReader.allBytes; //read entire string of bytes of amsi file
 
@@ -727,7 +728,7 @@ namespace ProcessHooker
                     return calculateHash(onDiskAmsiCodeSection);
                     }
                 }
-            return "error. Cant find .text section";
+            return "[-] Error: .text SECTION NOT FOUND";
         }
 
 
@@ -735,6 +736,7 @@ namespace ProcessHooker
 
         static IntPtr AmsiHandleOpener(IntPtr myHandle)
         {
+            Console.WriteLine("[+] AMSI Handler function opened ");
             IntPtr[] listOfModules = new IntPtr[1024]; //define list to store modules handles for use in EnumProcessModules
             GCHandle gch = GCHandle.Alloc(listOfModules, GCHandleType.Pinned); //using GCHandle to create a managed object (array) in unmanaged space to prevent grabage collector from freeing before use
             IntPtr modulePointer = gch.AddrOfPinnedObject(); //pointer to array
@@ -746,7 +748,7 @@ namespace ProcessHooker
                 int numOfModules = (Int32)(bytesNeeded / (Marshal.SizeOf(typeof(IntPtr)))); // number of modules from bytes to characters in the list
                 for (int x = 0; x <= numOfModules; x++)
                 {
-                    string[] moduleName = new string[1024];
+                    StringBuilder moduleName = new StringBuilder(1024); // why is string builder needed here? Memory access violation if i use a normal string array ----------------------------------
                     GetModuleFileNameEx(myHandle, listOfModules[x], moduleName, (int)(moduleName.Length)); //retreives path for the file
                     if (moduleName.ToString().Contains("amsi.dll"))
                     {
