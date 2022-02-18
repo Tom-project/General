@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.IO;
 using detection;
 using System.Security.Cryptography;
+using System.Text;
+
 
 
 namespace detection
@@ -608,10 +610,12 @@ namespace ProcessHooker
             public uint SizeOfImage;
             public IntPtr EntryPoint;
         }
+        
 
         //implement required kernel32.dll functions 
         [DllImport("kernel32")]
         public static extern IntPtr LoadLibrary(string name);
+        
         [DllImport("kernel32")]
         public static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
 
@@ -624,12 +628,20 @@ namespace ProcessHooker
         [DllImport("kernel32.dll")]
         public static extern bool WriteProcessMemory(int hProcess, int lpBaseAddress, byte lpBuffer, int nSize, int lpNumberOfBytesWritten);
 
-        [DllImport("psapi.dll", SetLastError = true)]
-        public static extern bool GetModuleInformation(IntPtr hProcess,IntPtr hModule, out MODULEINFO lpmodinfo, uint cb);
-
         [DllImport("kernel32.dll")]
         public static extern bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, int dwSize, ref int lpNumberOfBytesRead);
 
+        [DllImport("psapi.dll", SetLastError = true)]
+        public static extern bool GetModuleInformation(IntPtr hProcess,IntPtr hModule, out MODULEINFO lpmodinfo, uint cb);
+
+        [DllImport("psapi.dll")]
+        static extern uint GetModuleHandleEx(IntPtr hProcess, IntPtr lpModuleName, IntPtr hModule);
+
+        [DllImport("psapi.dll", SetLastError = true)]
+        public static extern bool EnumProcessModules(IntPtr hProcess, [Out] IntPtr lphModule,UInt32 cb, [MarshalAs(UnmanagedType.U4)] out UInt32 lpcbNeeded);
+
+        [DllImport("psapi.dll")]
+        static extern uint GetModuleFileNameEx(IntPtr hProcess, IntPtr hModule,[Out] StringBuilder lpBaseName, [In][MarshalAs(UnmanagedType.U4)] int nSize);
         //[DllImport("C:\\Users\\Dev1\\source\\repos\\PEHeaderReader2\\PEHeaderReader2\\bin\\Release\\net6.0\\PEHeaderReader2.dll")]
         //public static extern PeHeaderReader(string filepath);
 
@@ -637,7 +649,7 @@ namespace ProcessHooker
         /*
         [DllImport("kernel32")]
         public static extern bool VirtualProtect(IntPtr lpAddress, int dwSize, uint flNewProtect, out IntPtr lpflOldProtect);
-        
+
         [DllImport("kernel32.dll", EntryPoint = "RtlMoveMemory", SetLastError = false)]
         static extern void MoveMemory(IntPtr dest, IntPtr src, int size);
         */
@@ -662,6 +674,11 @@ namespace ProcessHooker
 
 
         }
+        
+        static void csvWriter()
+        {
+
+        }
 
         //void WaitForProcess()
         static void startWatch_EventArrived(object sender, EventArrivedEventArgs e)
@@ -678,43 +695,40 @@ namespace ProcessHooker
                     {
                         Console.WriteLine("Process: {0} ID: {1}", p.ProcessName, p.Id);
                     }
-                    handlehooking(processlist[0].Id); //hook into the new powershell process for monitoring
+                    IntegrityCheck(processlist[0].Id); //hook into the new powershell process for monitoring
                 }
 
             
         }
 
-        static string handlehooking(int pid)
+        static bool IntegrityCheck(int pid)
         {
             //Hook myProcess = new findPshellProcess(); //create object of class hook
             //uint pid = myProcess.processlist[0].Id; //use object to get return value of powershell process id
-            Console.WriteLine("[+] HandleHooking called");
+            Console.WriteLine("[+] IntegrityCheck called");
             OnDiskAnalyzer();
 
             int PROCESS_ALL_ACCESS = (0x1F0FFF);
             IntPtr myHandle = OpenProcess(PROCESS_ALL_ACCESS, true, pid); //Handle to new PowerShell process
 
-            if (myHandle != null)
+            
+            string onDiskHash = OnDiskAnalyzer();
+            string inMemoryHash = AmsiHandleOpener(myHandle);
+
+            if (string.Equals(onDiskHash, inMemoryHash) == false)
             {
-                string onDiskHash = OnDiskAnalyzer();
-                string inMemoryHash = InMemoryAnalyzer(pid, myHandle);
-
-                if (string.Equals(onDiskHash, inMemoryHash) == false)
-                {
-                    Console.WriteLine("[+] Memory Patching Detected in process: %d",pid);
-                    //write data to csv including hash in numeric terms, entry point for process, raw data size, etc
-
-                }
-                else
-                {
-                    Console.WriteLine("[+] Process has not been tampered with: %d", pid);
-                    //Write data to csv
-                }
-
+                Console.WriteLine("[+] Memory Patching Detected in process: %d",pid);
+                //write data to csv including hash in numeric terms, entry point for process, raw data size, etc
                 CloseHandle(myHandle);
+                return true;
             }
-            return "Error opening handle";
-
+            else
+            {
+                Console.WriteLine("[+] Process has not been tampered with: %d", pid);
+                //Write data to csv
+                CloseHandle(myHandle);
+                return false;
+            }
         }
 
         static string OnDiskAnalyzer()
@@ -742,25 +756,58 @@ namespace ProcessHooker
                 }
             return "error. Cant find .text section";
         }
-        static string InMemoryAnalyzer(int pid, IntPtr myHandle)
+
+        static void AmsiHandleOpener(IntPtr myHandle)
         {
-            //Do something
-            Console.WriteLine("[+]Memory analyzer called");
+            IntPtr[] listOfModules = new IntPtr[1024]; //define list to store modules handles for use in EnumProcessModules
+            GCHandle gch = GCHandle.Alloc(listOfModules, GCHandleType.Pinned); //using GCHandle to create a managed object (array) in unmanaged space to prevent grabage collector from freeing before use
+            IntPtr modulePointer = gch.AddrOfPinnedObject(); //pointer to array
+            uint arrSize = (uint)(Marshal.SizeOf(typeof(IntPtr)) * (listOfModules.Length)); // calculate size of array in bytes
+            uint bytesNeeded = 0;
+
+            if (EnumProcessModules(myHandle, modulePointer, arrSize, out bytesNeeded)) //returns non zero if it succeeds, retreieve a handle for each module in the specified process (powershell)
+            {
+                int numOfModules = (Int32)(bytesNeeded / (Marshal.SizeOf(typeof(IntPtr)))); // number of modules from bytes to characters in the list
+                for (int x = 0; x <= numOfModules; x++)
+                {
+                    StringBuilder moduleName = new StringBuilder(1024);
+                    GetModuleFileNameEx(myHandle, listOfModules[x], moduleName, (int)(moduleName.Length)); //retreives path for the file
+                    if (moduleName.ToString().Contains("amsi.dll"))
+                    {
+                        InMemoryAnalyzer(myHandle, listOfModules[x]);
+                        gch.Free();
+                        
+                    }
+                }
+            }
+            gch.Free();
+            
+        }
+        static string InMemoryAnalyzer(IntPtr myHandle, IntPtr amsiModuleHandle)
+        {
+            Console.WriteLine("[+] Memory analyzer called");
             int bytesRead = 0;
+            MODULEINFO amsiDLLInfo = new MODULEINFO(); //define pointer to MODULEINFO struct
+            
+            
+            if (amsiModuleHandle == null)
+                {
+                    return "Error";
+                }
 
-            GetModuleInformation(myHandle, handleofmodule, pointertoMODULEINFO, Marshal.SizeOf(typeof(MODULEINFO)));
 
-            ReadProcessMemory(myHandle, amsiModuleHandle, inMemoryAmsiDLL, inMemoryAmsiDLL.Length, ref bytesRead);
+            GetModuleInformation(myHandle, amsiModuleHandle, out amsiDLLInfo, (uint)Marshal.SizeOf(typeof(MODULEINFO))); //Get info of the current hooked process, like entry point, size of image etc and store in MODULEINFO structure
+            byte[] InMemoryAmsi = new byte[amsiDLLInfo.SizeOfImage]; //uses pointer to MODULEINFO struct to grab information about the in memory AMSI dll
+            ReadProcessMemory(myHandle, amsiModuleHandle, InMemoryAmsi, InMemoryAmsi.Length, ref bytesRead); // copies the information of the hooked process to InMemoryAmsi buffer
 
-            PeHeaderReader.IMAGE_SECTION_HEADER[] InMemoryAmsiSection = InMemoryAmsiReader.ImageSectionHeaders;
-            byte[] InMemoryAmsi = InMemoryAmsiReader.allBytes; //read entire string of bytes of amsi file
-
+            PeHeaderReader InMemoryAmsiReader = new PeHeaderReader(InMemoryAmsi); //read the bytes copied from the in memory amsi dll
+            PeHeaderReader.IMAGE_SECTION_HEADER[] InMemoryAmsiSection = InMemoryAmsiReader.ImageSectionHeaders; //grab headers of this in memory amsi dll
             int i;
 
             for (i = 0; i < InMemoryAmsiSection.Length; i++)
             {
                 char[] sectionName = InMemoryAmsiSection[i].Name;
-                if (sectionName.Equals(".text"))
+                if (sectionName.Equals(".text")) // grab .text header for in memory amsi dll
                 {
                     int VirtualAddr = (int)InMemoryAmsiSection[i].VirtualAddress; // VirtualAddress is 
                     int SizeOfRawData = (int)InMemoryAmsiSection[i].SizeOfRawData;
