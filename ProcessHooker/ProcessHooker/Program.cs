@@ -641,7 +641,7 @@ namespace ProcessHooker
         public static extern bool EnumProcessModules(IntPtr hProcess, [Out] IntPtr lphModule,UInt32 cb, [MarshalAs(UnmanagedType.U4)] out UInt32 lpcbNeeded);
 
         [DllImport("psapi.dll")]
-        static extern uint GetModuleFileNameEx(IntPtr hProcess, IntPtr hModule,[Out] StringBuilder lpBaseName, [In][MarshalAs(UnmanagedType.U4)] int nSize);
+        static extern uint GetModuleFileNameEx(IntPtr hProcess, IntPtr hModule,[Out] string[] lpBaseName, [In][MarshalAs(UnmanagedType.U4)] int nSize);
 
 
 
@@ -677,7 +677,7 @@ namespace ProcessHooker
             
         }
 
-        static bool IntegrityCheck(int pid)
+        static void IntegrityCheck(int pid)
         {
             Console.WriteLine("[+] IntegrityCheck called");
             OnDiskAnalyzer();
@@ -694,14 +694,14 @@ namespace ProcessHooker
                 Console.WriteLine("[+] Memory Patching Detected in process: %d",pid);
                 //write data to csv including hash in numeric terms, entry point for process, raw data size, etc
                 CloseHandle(myHandle);
-                return true;
+                
             }
             else
             {
                 Console.WriteLine("[+] Process has not been tampered with: %d", pid);
                 //Write data to csv
                 CloseHandle(myHandle);
-                return false;
+                
             }
         }
 
@@ -734,7 +734,7 @@ namespace ProcessHooker
 
 
 
-        static void AmsiHandleOpener(IntPtr myHandle)
+        static IntPtr AmsiHandleOpener(IntPtr myHandle)
         {
             IntPtr[] listOfModules = new IntPtr[1024]; //define list to store modules handles for use in EnumProcessModules
             GCHandle gch = GCHandle.Alloc(listOfModules, GCHandleType.Pinned); //using GCHandle to create a managed object (array) in unmanaged space to prevent grabage collector from freeing before use
@@ -747,32 +747,28 @@ namespace ProcessHooker
                 int numOfModules = (Int32)(bytesNeeded / (Marshal.SizeOf(typeof(IntPtr)))); // number of modules from bytes to characters in the list
                 for (int x = 0; x <= numOfModules; x++)
                 {
-                    StringBuilder moduleName = new StringBuilder(1024);
+                    string[] moduleName = new string[1024];
                     GetModuleFileNameEx(myHandle, listOfModules[x], moduleName, (int)(moduleName.Length)); //retreives path for the file
                     if (moduleName.ToString().Contains("amsi.dll"))
                     {
                         //InMemoryAnalyzer(myHandle, listOfModules[x]);
-                        return listOfModules[x]
                         gch.Free();
-                        
+                        return listOfModules[x];
                     }
                 }
             }
             gch.Free();
-            
+            return IntPtr.Zero;
+
         }
         static string InMemoryAnalyzer(IntPtr myHandle)
         {
             Console.WriteLine("[+] Memory analyzer called");
             int bytesRead = 0;
-            MODULEINFO amsiDLLInfo = new MODULEINFO(); //define pointer to MODULEINFO struct
+            MODULEINFO amsiDLLInfo = new MODULEINFO(); //define pointer to MODULEINFO struct to store module information from result of GetModuleInformation
             
             IntPtr amsiModuleHandle = AmsiHandleOpener(myHandle);
 
-            if (amsiModuleHandle == null)
-                {
-                    return "Error";
-                }
 
             GetModuleInformation(myHandle, amsiModuleHandle, out amsiDLLInfo, (uint)Marshal.SizeOf(typeof(MODULEINFO))); //Get info of the current hooked process, like entry point, size of image etc and store in MODULEINFO structure
             byte[] InMemoryAmsi = new byte[amsiDLLInfo.SizeOfImage]; //uses pointer to MODULEINFO struct to grab information about the in memory AMSI dll
@@ -787,7 +783,7 @@ namespace ProcessHooker
                 char[] sectionName = InMemoryAmsiSection[i].Name;
                 if (sectionName.Equals(".text")) // grab .text header for in memory amsi dll
                 {
-                    int VirtualAddr = (int)InMemoryAmsiSection[i].VirtualAddress; // VirtualAddress is 
+                    int VirtualAddr = (int)InMemoryAmsiSection[i].VirtualAddress; // .VirtualAddress is known attribute in c#
                     int SizeOfRawData = (int)InMemoryAmsiSection[i].SizeOfRawData;
                     byte[] InMemoryAmsiCodeSection = new byte[SizeOfRawData];
                     Array.Copy(InMemoryAmsi, VirtualAddr, InMemoryAmsiCodeSection, 0, SizeOfRawData); //copy 
@@ -795,7 +791,7 @@ namespace ProcessHooker
                     return calculateHash(InMemoryAmsiCodeSection);
                 }
             }
-            return "error. Cant find .text section";
+            return "[-] Error: .text SECTION NOT FOUND";
         }
 
 
