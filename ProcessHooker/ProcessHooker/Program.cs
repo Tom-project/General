@@ -642,30 +642,6 @@ namespace ProcessHooker
 
         [DllImport("psapi.dll")]
         static extern uint GetModuleFileNameEx(IntPtr hProcess, IntPtr hModule,[Out] StringBuilder lpBaseName, [In][MarshalAs(UnmanagedType.U4)] int nSize);
-        //[DllImport("C:\\Users\\Dev1\\source\\repos\\PEHeaderReader2\\PEHeaderReader2\\bin\\Release\\net6.0\\PEHeaderReader2.dll")]
-        //public static extern PeHeaderReader(string filepath);
-
-
-        /*
-        [DllImport("kernel32")]
-        public static extern bool VirtualProtect(IntPtr lpAddress, int dwSize, uint flNewProtect, out IntPtr lpflOldProtect);
-
-        [DllImport("kernel32.dll", EntryPoint = "RtlMoveMemory", SetLastError = false)]
-        static extern void MoveMemory(IntPtr dest, IntPtr src, int size);
-        */
-
-        /*int findPshellProcess()
-        {
-            Process[] processlist = Process.GetProcessesByName("powershell");
-
-            foreach (Process p in processlist)
-            {
-                Console.WriteLine("Process: {0} ID: {1}", p.ProcessName, p.Id);
-            }
-
-           return processlist[0].Id;
-        }
-        */
 
 
 
@@ -680,7 +656,7 @@ namespace ProcessHooker
 
         }
 
-        //void WaitForProcess()
+        
         static void startWatch_EventArrived(object sender, EventArrivedEventArgs e)
         {
             Console.WriteLine("[+] EventArrived function");
@@ -703,8 +679,6 @@ namespace ProcessHooker
 
         static bool IntegrityCheck(int pid)
         {
-            //Hook myProcess = new findPshellProcess(); //create object of class hook
-            //uint pid = myProcess.processlist[0].Id; //use object to get return value of powershell process id
             Console.WriteLine("[+] IntegrityCheck called");
             OnDiskAnalyzer();
 
@@ -713,7 +687,7 @@ namespace ProcessHooker
 
             
             string onDiskHash = OnDiskAnalyzer();
-            string inMemoryHash = AmsiHandleOpener(myHandle);
+            string inMemoryHash = InMemoryAnalyzer(myHandle);
 
             if (string.Equals(onDiskHash, inMemoryHash) == false)
             {
@@ -757,6 +731,9 @@ namespace ProcessHooker
             return "error. Cant find .text section";
         }
 
+
+
+
         static void AmsiHandleOpener(IntPtr myHandle)
         {
             IntPtr[] listOfModules = new IntPtr[1024]; //define list to store modules handles for use in EnumProcessModules
@@ -774,7 +751,8 @@ namespace ProcessHooker
                     GetModuleFileNameEx(myHandle, listOfModules[x], moduleName, (int)(moduleName.Length)); //retreives path for the file
                     if (moduleName.ToString().Contains("amsi.dll"))
                     {
-                        InMemoryAnalyzer(myHandle, listOfModules[x]);
+                        //InMemoryAnalyzer(myHandle, listOfModules[x]);
+                        return listOfModules[x]
                         gch.Free();
                         
                     }
@@ -783,18 +761,18 @@ namespace ProcessHooker
             gch.Free();
             
         }
-        static string InMemoryAnalyzer(IntPtr myHandle, IntPtr amsiModuleHandle)
+        static string InMemoryAnalyzer(IntPtr myHandle)
         {
             Console.WriteLine("[+] Memory analyzer called");
             int bytesRead = 0;
             MODULEINFO amsiDLLInfo = new MODULEINFO(); //define pointer to MODULEINFO struct
             
-            
+            IntPtr amsiModuleHandle = AmsiHandleOpener(myHandle);
+
             if (amsiModuleHandle == null)
                 {
                     return "Error";
                 }
-
 
             GetModuleInformation(myHandle, amsiModuleHandle, out amsiDLLInfo, (uint)Marshal.SizeOf(typeof(MODULEINFO))); //Get info of the current hooked process, like entry point, size of image etc and store in MODULEINFO structure
             byte[] InMemoryAmsi = new byte[amsiDLLInfo.SizeOfImage]; //uses pointer to MODULEINFO struct to grab information about the in memory AMSI dll
@@ -819,12 +797,20 @@ namespace ProcessHooker
             }
             return "error. Cant find .text section";
         }
+
+
+
+
+
         static String calculateHash(byte[] bytesToHash) //takes byte array (and calls it bytesToHash) to hash (from Analyzer functions)
         {
             MD5 md5CheckSum = MD5.Create();
             var hash = md5CheckSum.ComputeHash(bytesToHash);
             return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
         }
+
+
+
 
         static void Main(string[] args)
         {
