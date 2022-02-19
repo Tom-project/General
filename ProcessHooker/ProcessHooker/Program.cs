@@ -10,6 +10,7 @@ using System.Text;
 
 
 
+
 namespace detection
 {
     public class PeHeaderReader
@@ -613,11 +614,6 @@ namespace ProcessHooker
         
 
         //implement required kernel32.dll functions 
-        [DllImport("kernel32")]
-        public static extern IntPtr LoadLibrary(string name);
-        
-        [DllImport("kernel32")]
-        public static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
 
         [DllImport("kernel32")]
         public static extern IntPtr OpenProcess(int dwDesiredAccess, bool bInheritHandle, int dwProcessId);
@@ -668,10 +664,13 @@ namespace ProcessHooker
                     Process[] processlist = Process.GetProcessesByName("powershell");
                     foreach (Process p in processlist)
                     {
-                        Console.WriteLine("Process Name: {0} Process ID: {1}", p.ProcessName, p.Id);
+                        Console.WriteLine("Process Name: {0} \tProcess ID: {1}", p.ProcessName, p.Id);
                     }
+                
                     IntegrityCheck(processlist[0].Id); //hook into the new powershell process for monitoring
+                
                 }
+
 
             
         }
@@ -688,26 +687,29 @@ namespace ProcessHooker
                 Console.WriteLine("[-] Couldn't open handle");
                 System.Environment.Exit(0);
             }
-            
-            string onDiskHash = OnDiskAnalyzer();
-            string inMemoryHash = InMemoryAnalyzer(myHandle);
+            //int i = 0;
+            //while (i < 10) {
+                string onDiskHash = OnDiskAnalyzer();
+                string inMemoryHash = InMemoryAnalyzer(myHandle);
 
-            Console.WriteLine("[INFO] On Disk: {0} \n[INFO] In memory is: {1}", onDiskHash, inMemoryHash);
+                Console.WriteLine("[INFO] On Disk: {0} \n[INFO] In memory: {1}", onDiskHash, inMemoryHash);
 
-            if (inMemoryHash.Equals(onDiskHash) ==  false)
-            {
-                Console.WriteLine("[+] Memory Patching Detected in process: {0}",pid);
-                //write data to csv including hash in numeric terms, entry point for process, raw data size, etc
-                CloseHandle(myHandle);
+                if (inMemoryHash.Equals(onDiskHash) == false)
+                {
+                    Console.WriteLine("[+] Memory Patching Detected in process: {0}", pid);
+                    //write data to csv including hash in numeric terms, entry point for process, raw data size, etc
+                    CloseHandle(myHandle);
+
+                }
+                else
+                {
+                    Console.WriteLine("[+] Process has not been tampered with: {0}", pid);
+                    //Write data to csv
+                    CloseHandle(myHandle);
+
+                }
                 
-            }
-            else
-            {
-                Console.WriteLine("[+] Process has not been tampered with: {0}", pid);
-                //Write data to csv
-                CloseHandle(myHandle);
-                
-            }
+            //}
         }
 
         static string OnDiskAnalyzer()
@@ -756,7 +758,8 @@ namespace ProcessHooker
                 for (int x = 0; x <= numOfModules; x++)
                 {
                     StringBuilder moduleName = new StringBuilder(1024); // why is string builder needed here? Memory access violation if i use a normal string array ----------------------------------
-                    GetModuleFileNameEx(myHandle, listOfModules[x], moduleName, (int)(moduleName.Length)); //retreives path for the file
+                    GetModuleFileNameEx(myHandle, listOfModules[x], moduleName, (int)(moduleName.Capacity)); //retreives path for the file
+                    //Console.WriteLine("ListOfModules = {0} \nmoduleName = {1}", listOfModules[x], moduleName);
                     if (moduleName.ToString().Contains("amsi.dll"))
                     {
                         //InMemoryAnalyzer(myHandle, listOfModules[x]);
@@ -764,10 +767,11 @@ namespace ProcessHooker
                         Console.WriteLine("[+] Found amsi.dll in memory");
                         return listOfModules[x];
                     }
+                    
                 }
             }
             gch.Free();
-            Console.WriteLine("[-] Couldn't find AMSI in memory");
+            Console.WriteLine("[-] Couldn't open handle");
             return IntPtr.Zero;
             System.Environment.Exit(0);
 
