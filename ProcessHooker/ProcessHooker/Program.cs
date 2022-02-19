@@ -682,12 +682,17 @@ namespace ProcessHooker
 
             int PROCESS_ALL_ACCESS = (0x1F0FFF);
             IntPtr myHandle = OpenProcess(PROCESS_ALL_ACCESS, true, pid); //Handle to new PowerShell process
-
+            
+            if (myHandle == null)
+            {
+                Console.WriteLine("[-] Couldn't open handle");
+                System.Environment.Exit(0);
+            }
             
             string onDiskHash = OnDiskAnalyzer();
             string inMemoryHash = InMemoryAnalyzer(myHandle);
 
-            Console.WriteLine("[INFO] On Disk: {0} \n In memory is: {1}", onDiskHash, inMemoryHash);
+            Console.WriteLine("[INFO] On Disk: {0} \n[INFO] In memory is: {1}", onDiskHash, inMemoryHash);
 
             if (inMemoryHash.Equals(onDiskHash) ==  false)
             {
@@ -736,6 +741,7 @@ namespace ProcessHooker
 
         static IntPtr AmsiHandleOpener(IntPtr myHandle)
         {
+            // Credit to Aden Chung Wee Jing (https://github.com/countercept/AMSIDetection/tree/14418b3a236b85269048069f94d15887f6afbbb8) for help in this section
             Console.WriteLine("[+] AMSI Handler function opened ");
             IntPtr[] listOfModules = new IntPtr[1024]; //define list to store modules handles for use in EnumProcessModules
             GCHandle gch = GCHandle.Alloc(listOfModules, GCHandleType.Pinned); //using GCHandle to create a managed object (array) in unmanaged space to prevent grabage collector from freeing before use
@@ -743,7 +749,8 @@ namespace ProcessHooker
             uint arrSize = (uint)(Marshal.SizeOf(typeof(IntPtr)) * (listOfModules.Length)); // calculate size of array in bytes
             uint bytesNeeded = 0;
 
-            if (EnumProcessModules(myHandle, modulePointer, arrSize, out bytesNeeded)) //returns non zero if it succeeds, retreieve a handle for each module in the specified process (powershell)
+            //if statement seems to fail so not handle is being opened for module (amsi in memory) therefore no hash is found
+           if (EnumProcessModules(myHandle, modulePointer, arrSize, out bytesNeeded)) //returns non zero if it succeeds, retreieve a handle for each module in the specified process (powershell)
             {
                 int numOfModules = (Int32)(bytesNeeded / (Marshal.SizeOf(typeof(IntPtr)))); // number of modules from bytes to characters in the list
                 for (int x = 0; x <= numOfModules; x++)
@@ -754,12 +761,15 @@ namespace ProcessHooker
                     {
                         //InMemoryAnalyzer(myHandle, listOfModules[x]);
                         gch.Free();
+                        Console.WriteLine("[+] Found amsi.dll in memory");
                         return listOfModules[x];
                     }
                 }
             }
             gch.Free();
+            Console.WriteLine("[-] Couldn't find AMSI in memory");
             return IntPtr.Zero;
+            System.Environment.Exit(0);
 
         }
         static string InMemoryAnalyzer(IntPtr myHandle)
@@ -769,13 +779,14 @@ namespace ProcessHooker
             MODULEINFO amsiDLLInfo = new MODULEINFO(); //creates an object of the moduleinfo structure
         
             IntPtr amsiModuleHandle = AmsiHandleOpener(myHandle);
+            
 
             GetModuleInformation(myHandle, amsiModuleHandle, out amsiDLLInfo, (uint)Marshal.SizeOf(typeof(MODULEINFO))); //Get info of the current hooked module from the hooked process, like entry point, size of image etc and store in MODULEINFO structure
             byte[] InMemoryAmsi = new byte[amsiDLLInfo.SizeOfImage]; //defines a byte array to be size of the image.
             ReadProcessMemory(myHandle, amsiModuleHandle, InMemoryAmsi, InMemoryAmsi.Length, ref bytesRead); // copies the information of the hooked module to InMemoryAmsi buffer
 
             //Console.WriteLine(amsiDLLInfo.EntryPoint);
-            
+            /*
             var sb = new StringBuilder("new byte[] { ");
             foreach (var b in InMemoryAmsi)
             {
@@ -783,7 +794,7 @@ namespace ProcessHooker
             }
             sb.Append("}");
             Console.WriteLine(sb.ToString());
-            
+            */
             
             PeHeaderReader InMemoryAmsiReader = new PeHeaderReader(InMemoryAmsi); //read the bytes copied from the in memory amsi dll
             PeHeaderReader.IMAGE_SECTION_HEADER[] InMemoryAmsiSection = InMemoryAmsiReader.ImageSectionHeaders; //grab headers of this in memory amsi dll
