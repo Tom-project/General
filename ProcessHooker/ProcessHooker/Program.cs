@@ -716,8 +716,8 @@ namespace ProcessHooker
 
             for (i = 0;i < onDiskAmsiSection.Length; i++)
                 { 
-                    char[] sectionName = onDiskAmsiSection[i].Name;
-                    if (sectionName.Equals(".text"))
+                    char[] headerName = onDiskAmsiSection[i].Name; //grabbing char value and storing it into char array so we can reference it
+                if (headerName[0] == '.' && headerName[1] == 't' && headerName[2] == 'e' && headerName[3] == 'x' && headerName[4] == 't')
                     {
                         int RawData = (int)onDiskAmsiSection[i].PointerToRawData; // PointerToRawData is offset from the file's beginning to the section's data
                         int SizeOfRawData = (int)onDiskAmsiSection[i].SizeOfRawData; 
@@ -766,24 +766,34 @@ namespace ProcessHooker
         {
             Console.WriteLine("[+] Memory analyzer called");
             int bytesRead = 0;
-            MODULEINFO amsiDLLInfo = new MODULEINFO(); //define pointer to MODULEINFO struct to store module information from result of GetModuleInformation
-            
+            MODULEINFO amsiDLLInfo = new MODULEINFO(); //creates an object of the moduleinfo structure
+        
             IntPtr amsiModuleHandle = AmsiHandleOpener(myHandle);
 
+            GetModuleInformation(myHandle, amsiModuleHandle, out amsiDLLInfo, (uint)Marshal.SizeOf(typeof(MODULEINFO))); //Get info of the current hooked module from the hooked process, like entry point, size of image etc and store in MODULEINFO structure
+            byte[] InMemoryAmsi = new byte[amsiDLLInfo.SizeOfImage]; //defines a byte array to be size of the image.
+            ReadProcessMemory(myHandle, amsiModuleHandle, InMemoryAmsi, InMemoryAmsi.Length, ref bytesRead); // copies the information of the hooked module to InMemoryAmsi buffer
 
-            GetModuleInformation(myHandle, amsiModuleHandle, out amsiDLLInfo, (uint)Marshal.SizeOf(typeof(MODULEINFO))); //Get info of the current hooked process, like entry point, size of image etc and store in MODULEINFO structure
-            byte[] InMemoryAmsi = new byte[amsiDLLInfo.SizeOfImage]; //uses pointer to MODULEINFO struct to grab information about the in memory AMSI dll
-            ReadProcessMemory(myHandle, amsiModuleHandle, InMemoryAmsi, InMemoryAmsi.Length, ref bytesRead); // copies the information of the hooked process to InMemoryAmsi buffer
-
+            //Console.WriteLine(amsiDLLInfo.EntryPoint);
+            
+            var sb = new StringBuilder("new byte[] { ");
+            foreach (var b in InMemoryAmsi)
+            {
+                sb.Append(b + ", ");
+            }
+            sb.Append("}");
+            Console.WriteLine(sb.ToString());
+            
+            
             PeHeaderReader InMemoryAmsiReader = new PeHeaderReader(InMemoryAmsi); //read the bytes copied from the in memory amsi dll
             PeHeaderReader.IMAGE_SECTION_HEADER[] InMemoryAmsiSection = InMemoryAmsiReader.ImageSectionHeaders; //grab headers of this in memory amsi dll
             int i;
 
             for (i = 0; i < InMemoryAmsiSection.Length; i++)
             {
-                char[] sectionName = InMemoryAmsiSection[i].Name;
-                if (sectionName.Equals(".text")) // grab .text header for in memory amsi dll
-                {
+                char[] headerName = InMemoryAmsiSection[i].Name; //grabbing char value and storing it into char array so we can reference it
+                if (headerName[0] == '.' && headerName[1] == 't' && headerName[2] == 'e' && headerName[3] == 'x' && headerName[4] == 't') // grab .text header for in memory amsi dll
+                    {
                     int VirtualAddr = (int)InMemoryAmsiSection[i].VirtualAddress; // .VirtualAddress is known attribute in c#
                     int SizeOfRawData = (int)InMemoryAmsiSection[i].SizeOfRawData;
                     byte[] InMemoryAmsiCodeSection = new byte[SizeOfRawData];
