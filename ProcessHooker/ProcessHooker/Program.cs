@@ -7,6 +7,7 @@ using System.IO;
 using detection;
 using System.Security.Cryptography;
 using System.Text;
+using CsvHelper;
 
 
 namespace ProcessHooker
@@ -19,7 +20,7 @@ namespace ProcessHooker
             public uint SizeOfImage;
             public IntPtr EntryPoint;
         }
-        
+
 
         //implement required kernel32.dll functions 
 
@@ -36,51 +37,72 @@ namespace ProcessHooker
         public static extern bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, int dwSize, ref int lpNumberOfBytesRead);
 
         [DllImport("psapi.dll", SetLastError = true)]
-        public static extern bool GetModuleInformation(IntPtr hProcess,IntPtr hModule, out MODULEINFO lpmodinfo, uint cb);
+        public static extern bool GetModuleInformation(IntPtr hProcess, IntPtr hModule, out MODULEINFO lpmodinfo, uint cb);
 
         [DllImport("psapi.dll")]
         static extern uint GetModuleHandleEx(IntPtr hProcess, IntPtr lpModuleName, IntPtr hModule);
 
         [DllImport("psapi.dll", SetLastError = true)]
-        public static extern bool EnumProcessModules(IntPtr hProcess, [Out] IntPtr lphModule,UInt32 cb, [MarshalAs(UnmanagedType.U4)] out UInt32 lpcbNeeded);
+        public static extern bool EnumProcessModules(IntPtr hProcess, [Out] IntPtr lphModule, UInt32 cb, [MarshalAs(UnmanagedType.U4)] out UInt32 lpcbNeeded);
 
         [DllImport("psapi.dll")]
-        static extern uint GetModuleFileNameEx(IntPtr hProcess, IntPtr hModule,[Out] StringBuilder lpBaseName, [In][MarshalAs(UnmanagedType.U4)] int nSize);
+        static extern uint GetModuleFileNameEx(IntPtr hProcess, IntPtr hModule, [Out] StringBuilder lpBaseName, [In][MarshalAs(UnmanagedType.U4)] int nSize);
 
 
-
-        static void csvchecker()
+        static void csvWriter(Data grabData) //recieves object (Data is the class and grabData is the object name)
         {
 
 
-        }
-        
-        static void csvWriter()
-        {
+            var dataList = new List<Data>
+            {
+                new Data(){ Action = grabData.Action, Priority = grabData.Priority, Label = grabData.Label, EntryPoint = grabData.EntryPoint,
+                    VirtualMemorySize = grabData.VirtualMemorySize, RawDataSize = grabData.RawDataSize, Hash = grabData.Hash, HashState = grabData.HashState},
+            };
 
+
+            if (File.Exists(MyStaticValues.DataFile))
+            {
+
+                // Append to a file.
+                var config = new CsvConfiguration()
+                {
+                    // Don't write the header again.
+                    HasHeaderRecord = false,
+                };
+                using (var stream = File.Open(MyStaticValues.DataFile, FileMode.Append))
+                using (var writer = new StreamWriter(stream))
+                using (var csv = new CsvWriter(writer, config))
+                {
+                    csv.WriteRecords(dataList);
+                }
+            }
+            else
+            {
+
+            }
         }
 
-        
+
         static void startWatch_EventArrived(object sender, EventArrivedEventArgs e)
         {
             //Console.WriteLine("[+] EventArrived function");
             string processName = (string)e.NewEvent.Properties["ProcessName"].Value;
             if (string.Equals(processName, "powershell.exe"))
-                {
-                    Console.WriteLine("New PowerShell process started: ");
+            {
+                Console.WriteLine("New PowerShell process started: ");
 
-                    Process[] processlist = Process.GetProcessesByName("powershell");
-                    foreach (Process p in processlist)
-                    {
-                        Console.WriteLine("Process Name: {0} \tProcess ID: {1}", p.ProcessName, p.Id);
-                    }
-                
-                    IntegrityCheck(processlist[0].Id); //hook into the new powershell process for monitoring
-                
+                Process[] processlist = Process.GetProcessesByName("powershell");
+                foreach (Process p in processlist)
+                {
+                    Console.WriteLine("Process Name: {0} \tProcess ID: {1}", p.ProcessName, p.Id);
                 }
 
+                IntegrityCheck(processlist[0].Id); //hook into the new powershell process for monitoring
 
-            
+            }
+
+
+
         }
 
         static void IntegrityCheck(int pid)
@@ -89,7 +111,7 @@ namespace ProcessHooker
 
             int PROCESS_ALL_ACCESS = (0x1F0FFF);
             IntPtr myHandle = OpenProcess(PROCESS_ALL_ACCESS, true, pid); //Handle to new PowerShell process
-            
+
             if (myHandle == null)
             {
                 Console.WriteLine("[-] Couldn't open handle");
@@ -97,29 +119,40 @@ namespace ProcessHooker
             }
             //int i = 0;
             //while (i < 10) {
-                string onDiskHash = OnDiskAnalyzer();
-                string inMemoryHash = InMemoryAnalyzer(myHandle);
+            string onDiskHash = OnDiskAnalyzer();
+            string inMemoryHash = InMemoryAnalyzer(myHandle);
 
-                Console.WriteLine("[INFO] On Disk: {0} \n[INFO] In memory: {1}", onDiskHash, inMemoryHash);
+            Console.WriteLine("[INFO] On Disk: {0} \n[INFO] In memory: {1}", onDiskHash, inMemoryHash);
 
-                if (inMemoryHash.Equals(onDiskHash) == false)
-                {
-                    Console.WriteLine("[+] Memory Patching Detected in process: {0}", pid);
-                    //write data to csv including hash in numeric terms, entry point for process, raw data size, etc
-                    CloseHandle(myHandle);
+            if (inMemoryHash.Equals(onDiskHash) == false)
+            {
+                Console.WriteLine("[+] Memory Patching Detected in process: {0}", pid);
 
-                }
-                else
-                {
-                    Console.WriteLine("[+] Process has not been tampered with: {0}", pid);
-                    //Write data to csv
-                    CloseHandle(myHandle);
-
-                }
+                Data grabData = new Data();
+                grabData.Action = 1;
+                grabData.Priority = "High";
+               
+                //write data to csv including hash in numeric terms, entry point for process, raw data size, etc
+                csvWriter(grabData);
                 
-            //}
-        }
+                CloseHandle(myHandle);
+            }
+            else
+            {
+                Console.WriteLine("[+] Process has not been tampered with: {0}", pid);
+                Data grabData = new Data();
+                grabData.Action = 0;
+                grabData.Priority = "Low";
 
+                //write data to csv including hash in numeric terms, entry point for process, raw data size, etc
+                csvWriter(grabData);
+                CloseHandle(myHandle);
+
+            }
+
+
+        }
+    
         static string OnDiskAnalyzer()
         {
             Console.WriteLine("[+] Disk analyzer called");
@@ -131,16 +164,33 @@ namespace ProcessHooker
 
             for (i = 0;i < onDiskAmsiSection.Length; i++)
                 { 
-                    char[] headerName = onDiskAmsiSection[i].Name; //grabbing char value and storing it into char array so we can reference it
+                char[] headerName = onDiskAmsiSection[i].Name; //grabbing char value and storing it into char array so we can reference it
+
                 if (headerName[0] == '.' && headerName[1] == 't' && headerName[2] == 'e' && headerName[3] == 'x' && headerName[4] == 't')
                     {
-                        int RawData = (int)onDiskAmsiSection[i].PointerToRawData; // PointerToRawData is offset from the file's beginning to the section's data
-                        int SizeOfRawData = (int)onDiskAmsiSection[i].SizeOfRawData; 
-                        byte[] onDiskAmsiCodeSection = new byte[SizeOfRawData];
-                        Array.Copy(onDiskAmsi, RawData, onDiskAmsiCodeSection, 0, SizeOfRawData); //copy ondiskAmsi and rawdata into ondiskamsicodesection array up to sizeofrawdata
-                        //string AmsiHash = calculateHash(onDiskAmsiCodeSection); // md5 Hash of ondisk Amsi.dll
-                        
-                    return calculateHash(onDiskAmsiCodeSection);
+                    int RawData = (int)onDiskAmsiSection[i].PointerToRawData; // PointerToRawData is offset from the file's beginning to the section's data
+                    int SizeOfRawData = (int)onDiskAmsiSection[i].SizeOfRawData;
+                    int VirtualMemorySize = (int)onDiskAmsiSection[i].VirtualSize;
+                    int EntryPoint = (int)onDiskAmsiSection[i].VirtualAddress;
+                    byte[] onDiskAmsiCodeSection = new byte[SizeOfRawData];
+                    Array.Copy(onDiskAmsi, RawData, onDiskAmsiCodeSection, 0, SizeOfRawData); //copy ondiskAmsi and rawdata into ondiskamsicodesection array up to sizeofrawdata
+                    string AmsiHash = calculateHash(onDiskAmsiCodeSection); // md5 Hash of ondisk Amsi.dll
+
+                    //int numericHash = AmsiHash -> numeric value;
+                    int numericHash = int.Parse(AmsiHash, System.Globalization.NumberStyles.HexNumber);
+
+
+                    Data grabData = new Data();
+                    //grabData.Action = 1;
+                    //grabData.Priority = "High";
+                    grabData.RawDataSize = SizeOfRawData;
+                    grabData.Hash = numericHash;
+                    grabData.EntryPoint = EntryPoint;
+                    grabData.VirtualMemorySize = VirtualMemorySize;
+
+                    csvWriter(grabData);
+
+                    return AmsiHash;
                     }
                 }
             return "[-] Error: .text SECTION NOT FOUND";
@@ -247,6 +297,9 @@ namespace ProcessHooker
             Console.WriteLine("Is this a malicious program? Yes = 1 No = 0");
             string Label = Console.ReadLine();
 
+            Data grabData = new Data();
+            grabData.Label = Label;
+
             ManagementEventWatcher watcher = new ManagementEventWatcher(new WqlEventQuery("SELECT * FROM Win32_ProcessStartTrace"));
 
             watcher.EventArrived += new EventArrivedEventHandler(startWatch_EventArrived);
@@ -263,4 +316,53 @@ namespace ProcessHooker
         
     
     }
+
+    public static class MyStaticValues
+    {
+        public static string DataFile = "C:/Users/Dev1/Documents/Dataset5.csv";
+    }
+
+    public class Data
+    {
+        public int Action { get; set; }
+        public string Priority { get; set; }
+        public string Label { get; set; }
+        public int EntryPoint { get; set; }
+        public int VirtualMemorySize { get; set; }
+        public int RawDataSize { get; set; }
+        public int Hash { get; set; }
+        public int HashState { get; set; }
+
+
+        /* Constructor to access data if not using { get;set; }
+        public Data(uint action, string priority, uint label, uint entrypoint, uint virtualmemorysize, uint rawdatasize, uint hash, uint hashstate)
+        {
+            Action = action;
+            Priority = priority;
+            Label = label;
+            EntryPoint = entrypoint;
+            VirtualMemorySize = virtualmemorysize;
+            RawDataSize = rawdatasize;
+            Hash = hash;
+            HashState = hashstate;
+        }
+        */
+
+
+    }
+
+    
+    /* Create new object
+    public class TestClass
+    {
+        public void testMethod()
+        {
+            Data testing = new Data();
+            testing.Action = 1;
+            Console.WriteLine(testing.Action);
+
+        }
+    }
+    */
+
 }
