@@ -8,7 +8,8 @@ using detection;
 using System.Security.Cryptography;
 using System.Text;
 using CsvHelper;
-
+using System.Globalization;
+using CsvHelper.Configuration;
 
 namespace ProcessHooker
 {
@@ -55,31 +56,34 @@ namespace ProcessHooker
 
             var dataList = new List<Data>
             {
-                new Data(){ Action = grabData.Action, Priority = grabData.Priority, Label = grabData.Label, EntryPoint = grabData.EntryPoint,
+                new Data{ Action = grabData.Action, Priority = grabData.Priority, Label = grabData.Label, EntryPoint = grabData.EntryPoint,
                     VirtualMemorySize = grabData.VirtualMemorySize, RawDataSize = grabData.RawDataSize, Hash = grabData.Hash, HashState = grabData.HashState},
             };
 
 
             if (File.Exists(MyStaticValues.DataFile))
             {
-
-                // Append to a file.
-                var config = new CsvConfiguration()
-                {
-                    // Don't write the header again.
-                    HasHeaderRecord = false,
-                };
+               
                 using (var stream = File.Open(MyStaticValues.DataFile, FileMode.Append))
                 using (var writer = new StreamWriter(stream))
-                using (var csv = new CsvWriter(writer, config))
+                using (var csvWriter = new CsvWriter(writer, CultureInfo.InvariantCulture))
                 {
-                    csv.WriteRecords(dataList);
+                    csvWriter.WriteRecords(dataList);
                 }
             }
-            else
-            {
+            /*
+              else
+             {
+                 string[] header = {"test" };
+                 using (var stream = File.Open(MyStaticValues.DataFile, FileMode.Append))
+                 using (var writer = new StreamWriter(stream))
+                 using (var csvWriter = new CsvWriter(writer, config))
+                 {
 
-            }
+                     csvWriter.WriteHeader(header);
+                 }
+             }
+             */
         }
 
 
