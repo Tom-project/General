@@ -76,22 +76,26 @@ namespace ProcessHooker
                     foreach (Data d in dataList)
                     {
                         csvWriter.WriteRecord<Data>(d);
+                        csvWriter.NextRecord();
                     }
                 }
             }
             
               else
              {
-                File.Create(MyStaticValues.DataFile);
-                //using (var stream = File.Open(MyStaticValues.DataFile))
-                //using (var writer = new StreamWriter(stream))
-                using (StreamWriter sw = new StreamWriter(MyStaticValues.DataFile))
-                using (var csvWriter = new CsvWriter(sw, CultureInfo.InvariantCulture))
+                File.Create(MyStaticValues.DataFile).Close();
+
+                using (var stream = File.Open(MyStaticValues.DataFile, FileMode.Append))
+                using (var writer = new StreamWriter(stream))
+                //using (StreamWriter sw = new StreamWriter(MyStaticValues.DataFile))
+                using (var csvWriter = new CsvWriter(writer, CultureInfo.InvariantCulture))
                 {
                     csvWriter.WriteHeader<Data>();
+                    csvWriter.NextRecord();
                     foreach (Data d in dataList)
                     {
                         csvWriter.WriteRecord<Data>(d);
+                        csvWriter.NextRecord();
                     }
                 }
             }
@@ -120,56 +124,8 @@ namespace ProcessHooker
 
 
         }
-        /*
-        static void IntegrityCheck(int pid)
-        {
-            Console.WriteLine("[+] IntegrityCheck called");
 
-            int PROCESS_ALL_ACCESS = (0x1F0FFF);
-            IntPtr myHandle = OpenProcess(PROCESS_ALL_ACCESS, true, pid); //Handle to new PowerShell process
-
-            if (myHandle == null)
-            {
-                Console.WriteLine("[-] Couldn't open handle");
-                System.Environment.Exit(0);
-            }
-            //int i = 0;
-            //while (i < 10) {
-            //string onDiskHash = OnDiskAnalyzer();
-            //string inMemoryHash = InMemoryAnalyzer(myHandle);
-
-            //Console.WriteLine("[INFO] On Disk: {0} \n[INFO] In memory: {1}", onDiskHash, inMemoryHash);
-
-            
-            if (inMemoryHash.Equals(onDiskHash) == false)
-            {
-                Console.WriteLine("[+] Memory Patching Detected in process: {0}", pid);
-
-                Data grabData = new Data();
-                grabData.Action = 1;
-                grabData.Priority = "High";
-               
-                //write data to csv including hash in numeric terms, entry point for process, raw data size, etc
-                csvWriter(grabData);
-                
-                CloseHandle(myHandle);
-            }
-            else
-            {
-                Console.WriteLine("[+] Process has not been tampered with: {0}", pid);
-                Data grabData = new Data();
-                grabData.Action = 0;
-                grabData.Priority = "Low";
-
-                //write data to csv including hash in numeric terms, entry point for process, raw data size, etc
-                csvWriter(grabData);
-                CloseHandle(myHandle);
-
-            }
-            
-            
-        }
-            */
+       
         static string OnDiskAnalyzer(int pid)
         {
             Console.WriteLine("[+] Disk analyzer called");
@@ -209,7 +165,7 @@ namespace ProcessHooker
                     
                     Data grabDiskData = new Data();
                     grabDiskData.RawDataSize = SizeOfRawData;
-                    //grabDiskData.Hash = numericHash;
+                    grabDiskData.Hash = AmsiHash;
                     grabDiskData.EntryPoint = EntryPoint;
                     grabDiskData.VirtualMemorySize = VirtualMemorySize;
 
@@ -296,12 +252,13 @@ namespace ProcessHooker
                     if (inMemoryAmsiHash.Equals(onDiskAmsiHash) == false)
                     {
                         Console.WriteLine("[+] Memory Patching Detected in process: {0}", pid);
+                        Console.WriteLine("[INFO] On Disk: {0} \n[INFO] In memory: {1}", onDiskAmsiHash, inMemoryAmsiHash);
 
                         Data grabData = new Data();
                         grabData.Action = 1;
                         grabData.Priority = "High";
                         grabData.RawDataSize = SizeOfRawData;
-                        //grabData.Hash = numericHash;
+                        grabData.Hash = inMemoryAmsiHash;
                         grabData.EntryPoint = VirtualAddr;
                         grabData.VirtualMemorySize = VirtualMemorySize;
                         grabData.HashState = 1;
@@ -317,6 +274,8 @@ namespace ProcessHooker
                     else
                     {
                         Console.WriteLine("[+] Process has not been tampered with: {0}", pid);
+                        Console.WriteLine("[INFO] On Disk: {0} \n[INFO] In memory: {1}", onDiskAmsiHash, inMemoryAmsiHash);
+
                         Data grabData = new Data();
                         grabData.Action = 0;
                         grabData.Priority = "Low";
@@ -394,7 +353,7 @@ namespace ProcessHooker
         public int EntryPoint { get; set; }
         public int VirtualMemorySize { get; set; }
         public int RawDataSize { get; set; }
-        public long Hash { get; set; }
+        public string Hash { get; set; }
         public int HashState { get; set; }
 
     }
