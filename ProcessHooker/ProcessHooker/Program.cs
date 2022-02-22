@@ -105,7 +105,7 @@ namespace ProcessHooker
 
         static void startWatch_EventArrived(object sender, EventArrivedEventArgs e)
         {
-            //Console.WriteLine("[+] EventArrived function");
+            
             string processName = (string)e.NewEvent.Properties["ProcessName"].Value;
             if (string.Equals(processName, "powershell.exe"))
             {
@@ -117,8 +117,11 @@ namespace ProcessHooker
                     Console.WriteLine("Process Name: {0} \tProcess ID: {1}", p.ProcessName, p.Id);
                 }
 
-                OnDiskAnalyzer(processlist[0].Id); //hook into the new powershell process for monitoring
-
+                while (true)
+                {
+                    OnDiskAnalyzer(processlist[0].Id); //hook into the new powershell process for monitoring
+                    Thread.Sleep(3000);
+                }
             }
 
 
@@ -243,12 +246,13 @@ namespace ProcessHooker
                     int VirtualMemorySize = (int)InMemoryAmsiSection[i].VirtualSize;
                     
                     byte[] InMemoryAmsiCodeSection = new byte[SizeOfRawData];
-                    Array.Copy(InMemoryAmsi, VirtualAddr, InMemoryAmsiCodeSection, 0, SizeOfRawData); //copy 
+                    Array.Copy(InMemoryAmsi, VirtualAddr, InMemoryAmsiCodeSection, 0, SizeOfRawData); //copy data from InMemoryAmsi located at VirtualAddr into InMemoryAmsiCodeSection, up until SizeOfRawData
                     string inMemoryAmsiHash = calculateHash(InMemoryAmsiCodeSection); // md5 Hash of ondisk Amsi.dll
 
-                    //int numericHash = AmsiHash -> numeric value;
-                    //long numericHash = Convert.ToInt64(AmsiHash, 16);//ulong.Parse(AmsiHash, System.Globalization.NumberStyles.HexNumber);
+                    //long numericHash = Convert.ToInt64(AmsiHash, 16);
+                    //ulong.Parse(AmsiHash, System.Globalization.NumberStyles.HexNumber);
 
+                    
                     if (inMemoryAmsiHash.Equals(onDiskAmsiHash) == false)
                     {
                         Console.WriteLine("[+] Memory Patching Detected in process: {0}", pid);
@@ -280,7 +284,7 @@ namespace ProcessHooker
                         grabData.Action = 0;
                         grabData.Priority = "Low";
                         grabData.RawDataSize = SizeOfRawData;
-                        //grabData.Hash = numericHash;
+                        grabData.Hash = inMemoryAmsiHash;
                         grabData.EntryPoint = VirtualAddr;
                         grabData.VirtualMemorySize = VirtualMemorySize;
                         grabData.HashState = 0;
@@ -315,7 +319,7 @@ namespace ProcessHooker
 
 
 
-        static void Main(string[] args)
+        static void Main()
         {
             Console.WriteLine("Is this a malicious program? Yes = 1 No = 0");
             string Label = Console.ReadLine();
@@ -332,7 +336,7 @@ namespace ProcessHooker
             while (!Console.KeyAvailable) System.Threading.Thread.Sleep(50);
             watcher.Stop();
 
-
+            
 
         }
 
