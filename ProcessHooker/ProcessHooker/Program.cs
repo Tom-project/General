@@ -50,7 +50,7 @@ namespace ProcessHooker
         static extern uint GetModuleFileNameEx(IntPtr hProcess, IntPtr hModule, [Out] StringBuilder lpBaseName, [In][MarshalAs(UnmanagedType.U4)] int nSize);
 
 
-        static void csvWriter(Data grabData) //recieves object (Data is the class and grabData is the object name)
+        static void csvWriter(Data grabData, Data grabDiskData) //recieves object (Data is the class and grabData is the object name)
         {
 
 
@@ -58,7 +58,12 @@ namespace ProcessHooker
             {
                 new Data{ Action = grabData.Action, Priority = grabData.Priority, Label = grabData.Label, EntryPoint = grabData.EntryPoint,
                     VirtualMemorySize = grabData.VirtualMemorySize, RawDataSize = grabData.RawDataSize, Hash = grabData.Hash, HashState = grabData.HashState},
+
+                new Data{ Action = grabDiskData.Action, Priority = grabDiskData.Priority, Label = grabDiskData.Label, EntryPoint = grabDiskData.EntryPoint,
+                    VirtualMemorySize = grabDiskData.VirtualMemorySize, RawDataSize = grabDiskData.RawDataSize, Hash = grabDiskData.Hash, HashState = grabDiskData.HashState}
             };
+            
+
 
 
             if (File.Exists(MyStaticValues.DataFile))
@@ -68,22 +73,29 @@ namespace ProcessHooker
                 using (var writer = new StreamWriter(stream))
                 using (var csvWriter = new CsvWriter(writer, CultureInfo.InvariantCulture))
                 {
-                    csvWriter.WriteRecords(dataList);
+                    foreach (Data d in dataList)
+                    {
+                        csvWriter.WriteRecord<Data>(d);
+                    }
                 }
             }
-            /*
+            
               else
              {
-                 string[] header = {"test" };
-                 using (var stream = File.Open(MyStaticValues.DataFile, FileMode.Append))
-                 using (var writer = new StreamWriter(stream))
-                 using (var csvWriter = new CsvWriter(writer, config))
-                 {
-
-                     csvWriter.WriteHeader(header);
-                 }
-             }
-             */
+                File.Create(MyStaticValues.DataFile);
+                //using (var stream = File.Open(MyStaticValues.DataFile))
+                //using (var writer = new StreamWriter(stream))
+                using (StreamWriter sw = new StreamWriter(MyStaticValues.DataFile))
+                using (var csvWriter = new CsvWriter(sw, CultureInfo.InvariantCulture))
+                {
+                    csvWriter.WriteHeader<Data>();
+                    foreach (Data d in dataList)
+                    {
+                        csvWriter.WriteRecord<Data>(d);
+                    }
+                }
+            }
+             
         }
 
 
@@ -101,14 +113,14 @@ namespace ProcessHooker
                     Console.WriteLine("Process Name: {0} \tProcess ID: {1}", p.ProcessName, p.Id);
                 }
 
-                IntegrityCheck(processlist[0].Id); //hook into the new powershell process for monitoring
+                OnDiskAnalyzer(processlist[0].Id); //hook into the new powershell process for monitoring
 
             }
 
 
 
         }
-
+        /*
         static void IntegrityCheck(int pid)
         {
             Console.WriteLine("[+] IntegrityCheck called");
@@ -123,11 +135,12 @@ namespace ProcessHooker
             }
             //int i = 0;
             //while (i < 10) {
-            string onDiskHash = OnDiskAnalyzer();
-            string inMemoryHash = InMemoryAnalyzer(myHandle);
+            //string onDiskHash = OnDiskAnalyzer();
+            //string inMemoryHash = InMemoryAnalyzer(myHandle);
 
-            Console.WriteLine("[INFO] On Disk: {0} \n[INFO] In memory: {1}", onDiskHash, inMemoryHash);
+            //Console.WriteLine("[INFO] On Disk: {0} \n[INFO] In memory: {1}", onDiskHash, inMemoryHash);
 
+            
             if (inMemoryHash.Equals(onDiskHash) == false)
             {
                 Console.WriteLine("[+] Memory Patching Detected in process: {0}", pid);
@@ -153,13 +166,23 @@ namespace ProcessHooker
                 CloseHandle(myHandle);
 
             }
-
-
+            
+            
         }
-    
-        static string OnDiskAnalyzer()
+            */
+        static string OnDiskAnalyzer(int pid)
         {
             Console.WriteLine("[+] Disk analyzer called");
+
+            int PROCESS_ALL_ACCESS = (0x1F0FFF);
+            IntPtr myHandle = OpenProcess(PROCESS_ALL_ACCESS, true, pid); //Handle to new PowerShell process
+
+            if (myHandle == null)
+            {
+                Console.WriteLine("[-] Couldn't open handle");
+                System.Environment.Exit(0);
+            }
+
             PeHeaderReader onDiskAmsiReader = new PeHeaderReader("C:/Windows/System32/amsi.dll");
             PeHeaderReader.IMAGE_SECTION_HEADER[] onDiskAmsiSection = onDiskAmsiReader.ImageSectionHeaders;
             byte[] onDiskAmsi = onDiskAmsiReader.allBytes; //read entire string of bytes of amsi file
@@ -181,18 +204,16 @@ namespace ProcessHooker
                     string AmsiHash = calculateHash(onDiskAmsiCodeSection); // md5 Hash of ondisk Amsi.dll
 
                     //int numericHash = AmsiHash -> numeric value;
-                    int numericHash = int.Parse(AmsiHash, System.Globalization.NumberStyles.HexNumber);
+                    //long numericHash = Convert.ToInt64(AmsiHash, 16); //ulong.Parse(AmsiHash, System.Globalization.NumberStyles.HexNumber);
 
+                    
+                    Data grabDiskData = new Data();
+                    grabDiskData.RawDataSize = SizeOfRawData;
+                    //grabDiskData.Hash = numericHash;
+                    grabDiskData.EntryPoint = EntryPoint;
+                    grabDiskData.VirtualMemorySize = VirtualMemorySize;
 
-                    Data grabData = new Data();
-                    //grabData.Action = 1;
-                    //grabData.Priority = "High";
-                    grabData.RawDataSize = SizeOfRawData;
-                    grabData.Hash = numericHash;
-                    grabData.EntryPoint = EntryPoint;
-                    grabData.VirtualMemorySize = VirtualMemorySize;
-
-                    csvWriter(grabData);
+                    InMemoryAnalyzer(pid, myHandle, grabDiskData, AmsiHash);
 
                     return AmsiHash;
                     }
@@ -238,9 +259,10 @@ namespace ProcessHooker
             System.Environment.Exit(0);
 
         }
-        static string InMemoryAnalyzer(IntPtr myHandle)
+        static string InMemoryAnalyzer(int pid, IntPtr myHandle,Data grabDiskData, string onDiskAmsiHash)
         {
             Console.WriteLine("[+] Memory analyzer called");
+
             int bytesRead = 0;
             MODULEINFO amsiDLLInfo = new MODULEINFO(); //creates an object of the moduleinfo structure
         
@@ -250,17 +272,6 @@ namespace ProcessHooker
             GetModuleInformation(myHandle, amsiModuleHandle, out amsiDLLInfo, (uint)Marshal.SizeOf(typeof(MODULEINFO))); //Get info of the current hooked module from the hooked process, like entry point, size of image etc and store in MODULEINFO structure
             byte[] InMemoryAmsi = new byte[amsiDLLInfo.SizeOfImage]; //defines a byte array to be size of the image.
             ReadProcessMemory(myHandle, amsiModuleHandle, InMemoryAmsi, InMemoryAmsi.Length, ref bytesRead); // copies the information of the hooked module to InMemoryAmsi buffer
-
-            //Console.WriteLine(amsiDLLInfo.EntryPoint);
-            /*
-            var sb = new StringBuilder("new byte[] { ");
-            foreach (var b in InMemoryAmsi)
-            {
-                sb.Append(b + ", ");
-            }
-            sb.Append("}");
-            Console.WriteLine(sb.ToString());
-            */
             
             PeHeaderReader InMemoryAmsiReader = new PeHeaderReader(InMemoryAmsi); //read the bytes copied from the in memory amsi dll
             PeHeaderReader.IMAGE_SECTION_HEADER[] InMemoryAmsiSection = InMemoryAmsiReader.ImageSectionHeaders; //grab headers of this in memory amsi dll
@@ -273,10 +284,59 @@ namespace ProcessHooker
                     {
                     int VirtualAddr = (int)InMemoryAmsiSection[i].VirtualAddress; // .VirtualAddress is known attribute in c#
                     int SizeOfRawData = (int)InMemoryAmsiSection[i].SizeOfRawData;
+                    int VirtualMemorySize = (int)InMemoryAmsiSection[i].VirtualSize;
+                    
                     byte[] InMemoryAmsiCodeSection = new byte[SizeOfRawData];
                     Array.Copy(InMemoryAmsi, VirtualAddr, InMemoryAmsiCodeSection, 0, SizeOfRawData); //copy 
+                    string inMemoryAmsiHash = calculateHash(InMemoryAmsiCodeSection); // md5 Hash of ondisk Amsi.dll
 
-                    return calculateHash(InMemoryAmsiCodeSection);
+                    //int numericHash = AmsiHash -> numeric value;
+                    //long numericHash = Convert.ToInt64(AmsiHash, 16);//ulong.Parse(AmsiHash, System.Globalization.NumberStyles.HexNumber);
+
+                    if (inMemoryAmsiHash.Equals(onDiskAmsiHash) == false)
+                    {
+                        Console.WriteLine("[+] Memory Patching Detected in process: {0}", pid);
+
+                        Data grabData = new Data();
+                        grabData.Action = 1;
+                        grabData.Priority = "High";
+                        grabData.RawDataSize = SizeOfRawData;
+                        //grabData.Hash = numericHash;
+                        grabData.EntryPoint = VirtualAddr;
+                        grabData.VirtualMemorySize = VirtualMemorySize;
+                        grabData.HashState = 1;
+                        grabDiskData.Action = 1;
+                        grabDiskData.Priority = "High";
+                        grabDiskData.HashState = 1;
+
+                        //write data to csv including hash in numeric terms, entry point for process, raw data size, etc
+                        csvWriter(grabData, grabDiskData);
+
+                        CloseHandle(myHandle);
+                    }
+                    else
+                    {
+                        Console.WriteLine("[+] Process has not been tampered with: {0}", pid);
+                        Data grabData = new Data();
+                        grabData.Action = 0;
+                        grabData.Priority = "Low";
+                        grabData.RawDataSize = SizeOfRawData;
+                        //grabData.Hash = numericHash;
+                        grabData.EntryPoint = VirtualAddr;
+                        grabData.VirtualMemorySize = VirtualMemorySize;
+                        grabData.HashState = 0;
+                        grabDiskData.Action = 0;
+                        grabDiskData.Priority = "Low";
+                        grabDiskData.HashState = 0;
+
+                        //write data to csv including hash in numeric terms, entry point for process, raw data size, etc
+                        csvWriter(grabData, grabDiskData);
+                        CloseHandle(myHandle);
+
+                    }
+
+
+                    return inMemoryAmsiHash;
                 }
             }
             return "[-] Error: .text SECTION NOT FOUND";
@@ -334,39 +394,12 @@ namespace ProcessHooker
         public int EntryPoint { get; set; }
         public int VirtualMemorySize { get; set; }
         public int RawDataSize { get; set; }
-        public int Hash { get; set; }
+        public long Hash { get; set; }
         public int HashState { get; set; }
-
-
-        /* Constructor to access data if not using { get;set; }
-        public Data(uint action, string priority, uint label, uint entrypoint, uint virtualmemorysize, uint rawdatasize, uint hash, uint hashstate)
-        {
-            Action = action;
-            Priority = priority;
-            Label = label;
-            EntryPoint = entrypoint;
-            VirtualMemorySize = virtualmemorysize;
-            RawDataSize = rawdatasize;
-            Hash = hash;
-            HashState = hashstate;
-        }
-        */
-
 
     }
 
     
-    /* Create new object
-    public class TestClass
-    {
-        public void testMethod()
-        {
-            Data testing = new Data();
-            testing.Action = 1;
-            Console.WriteLine(testing.Action);
 
-        }
-    }
-    */
 
 }

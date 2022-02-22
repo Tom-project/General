@@ -51,3 +51,4 @@ C:\Users\Dev1\Documents\GitHub\General\ProcessHooker\ProcessHooker\bin\Debug\net
 C:\Users\Dev1\Documents\GitHub\General\ProcessHooker\ProcessHooker\bin\Debug\net6.0\runtimes\win\lib\net6.0\System.Management.dll
 C:\Users\Dev1\Documents\GitHub\General\ProcessHooker\ProcessHooker\obj\Debug\net6.0\ProcessHooker.csproj.CopyComplete
 C:\Users\Dev1\Documents\GitHub\General\ProcessHooker\ProcessHooker\obj\Debug\net6.0\ProcessHooker.genruntimeconfig.cache
+C:\Users\Dev1\Documents\GitHub\General\ProcessHooker\ProcessHooker\bin\Debug\net6.0\CsvHelper.dll
