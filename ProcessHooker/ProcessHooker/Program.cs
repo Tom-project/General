@@ -21,15 +21,44 @@ namespace ProcessHooker
             public uint SizeOfImage;
             public IntPtr EntryPoint;
         }
+        [StructLayout(LayoutKind.Sequential)]
+        public struct _PSAPI_WORKING_SET_EX_INFORMATION
+        {
+            public IntPtr VirtualAddress;
+            public BLOCK_EX VirtualAttributes;
+        }
 
+        public struct BLOCK_EX
+        {
+            public IntPtr Bits;
+            private long BitsLong { get { return Bits.ToInt64(); } } // To be able to perform bitwise operations in any bitness
+            int Valid = 1;
+            int ShareCount = 3;
+            int Win32Protection = 11;
+            int Shared = 1;
+            int Node = 6;
+            int Locked = 1;
+            int LargePage = 1;
+            int Reserved = 7;
+            int Bad = 1;
+            int ReservedUlong = 32;
+            public bool IsValid { get { return (BitsLong & 1) != 0; } }
+            public bool IsShareable { get { return (BitsLong >> (Win32Protection + ShareCount + Valid) & 1) != 0; } }
+        }
 
         //implement required kernel32.dll functions 
+
+        [DllImport("kernel32")]
+        public static extern IntPtr LoadLibrary(string name);
 
         [DllImport("kernel32")]
         public static extern IntPtr OpenProcess(int dwDesiredAccess, bool bInheritHandle, int dwProcessId);
 
         [DllImport("kernel32")]
         public static extern IntPtr CloseHandle(IntPtr hObject);
+        
+        [DllImport("kernel32")]
+        public static extern IntPtr GetProcAddress(IntPtr hObject, string lpProcName);
 
         [DllImport("kernel32.dll")]
         public static extern bool WriteProcessMemory(int hProcess, int lpBaseAddress, byte lpBuffer, int nSize, int lpNumberOfBytesWritten);
@@ -49,6 +78,10 @@ namespace ProcessHooker
         [DllImport("psapi.dll")]
         static extern uint GetModuleFileNameEx(IntPtr hProcess, IntPtr hModule, [Out] StringBuilder lpBaseName, [In][MarshalAs(UnmanagedType.U4)] int nSize);
 
+        [DllImport("psapi.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool QueryWorkingSetEx(IntPtr hProcess, [In, Out] _PSAPI_WORKING_SET_EX_INFORMATION[] pv, uint cb);
+
 
         static void csvWriter(Data grabData, Data grabDiskData) //recieves object (Data is the class and grabData is the object name)
         {
@@ -57,10 +90,10 @@ namespace ProcessHooker
             var dataList = new List<Data>
             {
                 new Data{ Action = grabData.Action, Priority = grabData.Priority, Label = grabData.Label, EntryPoint = grabData.EntryPoint,
-                    VirtualMemorySize = grabData.VirtualMemorySize, RawDataSize = grabData.RawDataSize, Hash = grabData.Hash, HashState = grabData.HashState},
+                    VirtualMemorySize = grabData.VirtualMemorySize, RawDataSize = grabData.RawDataSize, Hash = grabData.Hash, HashState = grabData.HashState, CopyOnWriteMmeorySet = grabData.CopyOnWriteMmeorySet},
 
                 new Data{ Action = grabDiskData.Action, Priority = grabDiskData.Priority, Label = grabDiskData.Label, EntryPoint = grabDiskData.EntryPoint,
-                    VirtualMemorySize = grabDiskData.VirtualMemorySize, RawDataSize = grabDiskData.RawDataSize, Hash = grabDiskData.Hash, HashState = grabDiskData.HashState}
+                    VirtualMemorySize = grabDiskData.VirtualMemorySize, RawDataSize = grabDiskData.RawDataSize, Hash = grabDiskData.Hash, HashState = grabDiskData.HashState, CopyOnWriteMmeorySet = grabDiskData.CopyOnWriteMmeorySet}
             };
             
 
@@ -266,9 +299,11 @@ namespace ProcessHooker
                         grabData.EntryPoint = VirtualAddr;
                         grabData.VirtualMemorySize = VirtualMemorySize;
                         grabData.HashState = 1;
+                        grabData.CopyOnWriteMmeorySet = 1;
                         grabDiskData.Action = 1;
                         grabDiskData.Priority = "High";
                         grabDiskData.HashState = 1;
+                        grabDiskData.CopyOnWriteMmeorySet = 1;
 
                         //write data to csv including hash in numeric terms, entry point for process, raw data size, etc
                         csvWriter(grabData, grabDiskData);
@@ -288,17 +323,19 @@ namespace ProcessHooker
                         grabData.EntryPoint = VirtualAddr;
                         grabData.VirtualMemorySize = VirtualMemorySize;
                         grabData.HashState = 0;
+                        grabData.CopyOnWriteMmeorySet = 0;
                         grabDiskData.Action = 0;
                         grabDiskData.Priority = "Low";
                         grabDiskData.HashState = 0;
+                        grabDiskData.CopyOnWriteMmeorySet = 0;
 
                         //write data to csv including hash in numeric terms, entry point for process, raw data size, etc
                         csvWriter(grabData, grabDiskData);
                         CloseHandle(myHandle);
 
                     }
-
-
+                    
+                    CheckingSharedMemory(myHandle, pid);
                     return inMemoryAmsiHash;
                 }
             }
@@ -317,7 +354,31 @@ namespace ProcessHooker
         }
 
 
+        static void CheckingSharedMemory(IntPtr myHandle, int pid)
+        {
+            
+            var memoryInfo = new _PSAPI_WORKING_SET_EX_INFORMATION[1];
+            
+            var amsiModuleAddr = LoadLibrary("c:/Windows/System32/amsi.dll");
+            var amsiAddr = GetProcAddress(amsiModuleAddr, "AmsiScanBuffer");
+            memoryInfo[0].VirtualAddress = amsiAddr;
+            uint size = (uint)(Marshal.SizeOf(typeof(_PSAPI_WORKING_SET_EX_INFORMATION)));
 
+            bool t = QueryWorkingSetEx(myHandle, memoryInfo, size);
+            Console.WriteLine("TEST: {0}", memoryInfo[0].VirtualAttributes.IsValid);
+            if (memoryInfo[0].VirtualAttributes.IsValid)
+            {
+                // In windows processes all reference the same dll in RAM unless one alters the memory of the dll in RAM. Upon this happening the dll is copied and put into a new area of RAM only referenced by this one process
+                // This check is to see if the memory is still shared by all processes or if it has been copied, which means it has been tamepred with.
+                Console.WriteLine("[+] Powershell: {0} Has \"Copy on Write Memory\". Memory has been tampered with: {1}", pid, memoryInfo[0].VirtualAttributes.IsShareable); 
+                
+            }
+            else
+            {
+                Console.WriteLine("Hit here");
+            }
+
+        }
 
         static void Main()
         {
@@ -359,6 +420,7 @@ namespace ProcessHooker
         public int RawDataSize { get; set; }
         public string Hash { get; set; }
         public int HashState { get; set; }
+        public int CopyOnWriteMmeorySet { get; set; }
 
     }
 
