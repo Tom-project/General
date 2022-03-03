@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Dev1\\Documents\\GitHub\\General\\ProcessHooker\\ProcessHooker\\ProcessHooker.csproj": {}
+    "C:\\Users\\Dev1\\Documents\\GitHub\\ProcessHooker\\ProcessHooker\\ProcessHooker.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Dev1\\Documents\\GitHub\\General\\ProcessHooker\\ProcessHooker\\ProcessHooker.csproj": {
+    "C:\\Users\\Dev1\\Documents\\GitHub\\ProcessHooker\\ProcessHooker\\ProcessHooker.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Dev1\\Documents\\GitHub\\General\\ProcessHooker\\ProcessHooker\\ProcessHooker.csproj",
+        "projectUniqueName": "C:\\Users\\Dev1\\Documents\\GitHub\\ProcessHooker\\ProcessHooker\\ProcessHooker.csproj",
         "projectName": "ProcessHooker",
-        "projectPath": "C:\\Users\\Dev1\\Documents\\GitHub\\General\\ProcessHooker\\ProcessHooker\\ProcessHooker.csproj",
+        "projectPath": "C:\\Users\\Dev1\\Documents\\GitHub\\ProcessHooker\\ProcessHooker\\ProcessHooker.csproj",
         "packagesPath": "C:\\Users\\Dev1\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Dev1\\Documents\\GitHub\\General\\ProcessHooker\\ProcessHooker\\obj\\",
+        "outputPath": "C:\\Users\\Dev1\\Documents\\GitHub\\ProcessHooker\\ProcessHooker\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Dev1\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -64,7 +64,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.101\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.102\\RuntimeIdentifierGraph.json"
         }
       }
     }

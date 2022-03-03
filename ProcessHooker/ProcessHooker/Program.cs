@@ -22,55 +22,6 @@ namespace ProcessHooker
             public uint SizeOfImage;
             public IntPtr EntryPoint;
         }
-
-
-        public struct _IMAGE_DATA_DIRECTORY_IMPORT
-        {
-            public IntPtr dwRVAFunctionNameList;
-            public IntPtr dwRVAModuleName;
-            public IntPtr dwRVAFunctionAddressList;
-        }
-
-        public struct _IMAGE_OPTIONAL_HEADER
-        {
-            //
-            // Standard fields.
-            //
-            ushort Magic;
-            string MajorLinkerVersion;
-            string MinorLinkerVersion;
-            ulong SizeOfCode;
-            ulong SizeOfInitializedData;
-            ulong SizeOfUninitializedData;
-            ulong AddressOfEntryPoint;
-            ulong BaseOfCode;
-            ulong BaseOfData;
-            //
-            // NT additional fields.
-            //
-            ulong ImageBase;
-            ulong SectionAlignment;
-            ulong FileAlignment;
-            ushort MajorOperatingSystemVersion;
-            ushort MinorOperatingSystemVersion;
-            ushort MajorImageVersion;
-            ushort MinorImageVersion;
-            ushort MajorSubsystemVersion;
-            ushort MinorSubsystemVersion;
-            ulong Reserved1;
-            ulong SizeOfImage;
-            ulong SizeOfHeaders;
-            ulong CheckSum;
-            ushort Subsystem;
-            ushort DllCharacteristics;
-            ulong SizeOfStackReserve;
-            ulong SizeOfStackCommit;
-            ulong SizeOfHeapReserve;
-            ulong SizeOfHeapCommit;
-            ulong LoaderFlags;
-            ulong NumberOfRvaAndSizes;
-            //IMAGE_DATA_DIRECTORY DataDirectory[16];
-        }
     
 
         //implement required kernel32.dll functions 
@@ -316,8 +267,14 @@ namespace ProcessHooker
                     Array.Copy(InMemoryAmsi, VirtualAddr, InMemoryAmsiCodeSection, 0, SizeOfRawData); //copy data from InMemoryAmsi located at VirtualAddr into InMemoryAmsiCodeSection, up until SizeOfRawData
                     string inMemoryAmsiHash = calculateHash(InMemoryAmsiCodeSection); // md5 Hash of ondisk Amsi.dll
 
+
                     PeHeaderReader.IMAGE_DATA_DIRECTORY importTable = InMemoryAmsiSection2.ImportTable;
                     Console.WriteLine("TESTTTTTTTTT {0}",importTable.VirtualAddress);
+
+                    //IntPtr pntrtest = importTable;
+                    var ver = Marshal.StructureToPtr(importTable.VirtualAddress, IntPtr pntrtest);
+
+
 
                     if (inMemoryAmsiHash.Equals(onDiskAmsiHash) == false)
                     {
