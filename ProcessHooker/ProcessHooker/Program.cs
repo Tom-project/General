@@ -15,39 +15,67 @@ namespace ProcessHooker
 {
     class Hook
     {
+        
         public struct MODULEINFO
         {
             public IntPtr lpBaseOfDll;
             public uint SizeOfImage;
             public IntPtr EntryPoint;
         }
-        [StructLayout(LayoutKind.Sequential)]
-        public struct _PSAPI_WORKING_SET_EX_INFORMATION
+
+
+        public struct _IMAGE_DATA_DIRECTORY_IMPORT
         {
-            public IntPtr VirtualAddress;
-            public BLOCK_EX VirtualAttributes;
+            public IntPtr dwRVAFunctionNameList;
+            public IntPtr dwRVAModuleName;
+            public IntPtr dwRVAFunctionAddressList;
         }
 
-        public struct BLOCK_EX
+        public struct _IMAGE_OPTIONAL_HEADER
         {
-            public IntPtr Bits;
-            private long BitsLong { get { return Bits.ToInt64(); } } // To be able to perform bitwise operations in any bitness
-            int Valid = 1;
-            int ShareCount = 3;
-            int Win32Protection = 11;
-            int Shared = 1;
-            int Node = 6;
-            int Locked = 1;
-            int LargePage = 1;
-            int Reserved = 7;
-            int Bad = 1;
-            int ReservedUlong = 32;
-            public bool IsValid { get { return (BitsLong & 1) != 0; } }
-            public bool IsShareable { get { return (BitsLong >> (Win32Protection + ShareCount + Valid) & 1) != 0; } }
+            //
+            // Standard fields.
+            //
+            ushort Magic;
+            string MajorLinkerVersion;
+            string MinorLinkerVersion;
+            ulong SizeOfCode;
+            ulong SizeOfInitializedData;
+            ulong SizeOfUninitializedData;
+            ulong AddressOfEntryPoint;
+            ulong BaseOfCode;
+            ulong BaseOfData;
+            //
+            // NT additional fields.
+            //
+            ulong ImageBase;
+            ulong SectionAlignment;
+            ulong FileAlignment;
+            ushort MajorOperatingSystemVersion;
+            ushort MinorOperatingSystemVersion;
+            ushort MajorImageVersion;
+            ushort MinorImageVersion;
+            ushort MajorSubsystemVersion;
+            ushort MinorSubsystemVersion;
+            ulong Reserved1;
+            ulong SizeOfImage;
+            ulong SizeOfHeaders;
+            ulong CheckSum;
+            ushort Subsystem;
+            ushort DllCharacteristics;
+            ulong SizeOfStackReserve;
+            ulong SizeOfStackCommit;
+            ulong SizeOfHeapReserve;
+            ulong SizeOfHeapCommit;
+            ulong LoaderFlags;
+            ulong NumberOfRvaAndSizes;
+            //IMAGE_DATA_DIRECTORY DataDirectory[16];
         }
+    
 
         //implement required kernel32.dll functions 
-
+        [DllImport("kernel32")]
+        public static extern IntPtr GetProcessById(int processId);
         [DllImport("kernel32")]
         public static extern IntPtr LoadLibrary(string name);
 
@@ -68,6 +96,7 @@ namespace ProcessHooker
 
         [DllImport("psapi.dll", SetLastError = true)]
         public static extern bool GetModuleInformation(IntPtr hProcess, IntPtr hModule, out MODULEINFO lpmodinfo, uint cb);
+        
 
         [DllImport("psapi.dll")]
         static extern uint GetModuleHandleEx(IntPtr hProcess, IntPtr lpModuleName, IntPtr hModule);
@@ -78,9 +107,7 @@ namespace ProcessHooker
         [DllImport("psapi.dll")]
         static extern uint GetModuleFileNameEx(IntPtr hProcess, IntPtr hModule, [Out] StringBuilder lpBaseName, [In][MarshalAs(UnmanagedType.U4)] int nSize);
 
-        [DllImport("psapi.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool QueryWorkingSetEx(IntPtr hProcess, [In, Out] _PSAPI_WORKING_SET_EX_INFORMATION[] pv, uint cb);
+    
 
 
         static void csvWriter(Data grabData, Data grabDiskData) //recieves object (Data is the class and grabData is the object name)
@@ -150,11 +177,11 @@ namespace ProcessHooker
                     Console.WriteLine("Process Name: {0} \tProcess ID: {1}", p.ProcessName, p.Id);
                 }
 
-                while (true)
-                {
+                //while (true)
+                //{
                     OnDiskAnalyzer(processlist[0].Id); //hook into the new powershell process for monitoring
-                    Thread.Sleep(3000);
-                }
+                    //Thread.Sleep(3000);
+                //}
             }
 
 
@@ -168,6 +195,8 @@ namespace ProcessHooker
 
             int PROCESS_ALL_ACCESS = (0x1F0FFF);
             IntPtr myHandle = OpenProcess(PROCESS_ALL_ACCESS, true, pid); //Handle to new PowerShell process
+
+            
 
             if (myHandle == null)
             {
@@ -226,25 +255,28 @@ namespace ProcessHooker
             uint arrSize = (uint)(Marshal.SizeOf(typeof(IntPtr)) * (listOfModules.Length)); // calculate size of array in bytes
             uint bytesNeeded = 0;
 
-            //if statement seems to fail so not handle is being opened for module (amsi in memory) therefore no hash is found
-           if (EnumProcessModules(myHandle, modulePointer, arrSize, out bytesNeeded)) //returns non zero if it succeeds, retreieve a handle for each module in the specified process (powershell)
-            {
-                int numOfModules = (Int32)(bytesNeeded / (Marshal.SizeOf(typeof(IntPtr)))); // number of modules from bytes to characters in the list
-                for (int x = 0; x <= numOfModules; x++)
+          
+                if (EnumProcessModules(myHandle, modulePointer, arrSize, out bytesNeeded)) //returns non zero if it succeeds, retreieve a handle for each module in the specified process (powershell)
                 {
-                    StringBuilder moduleName = new StringBuilder(1024); // why is string builder needed here? Memory access violation if i use a normal string array ----------------------------------
-                    GetModuleFileNameEx(myHandle, listOfModules[x], moduleName, (int)(moduleName.Capacity)); //retreives path for the file
-                    //Console.WriteLine("ListOfModules = {0} \nmoduleName = {1}", listOfModules[x], moduleName);
-                    if (moduleName.ToString().Contains("amsi.dll"))
+                    int numOfModules = (Int32)(bytesNeeded / (Marshal.SizeOf(typeof(IntPtr)))); // number of modules from bytes to characters in the list
+                    for (int x = 0; x <= numOfModules; x++)
                     {
-                        //InMemoryAnalyzer(myHandle, listOfModules[x]);
-                        gch.Free();
-                        Console.WriteLine("[+] Found amsi.dll in memory");
-                        return listOfModules[x];
+                        StringBuilder moduleName = new StringBuilder(1024); // why is string builder needed here? Memory access violation if i use a normal string array ----------------------------------
+                        GetModuleFileNameEx(myHandle, listOfModules[x], moduleName, (int)(moduleName.Capacity)); //retreives path for the file
+                        //Console.WriteLine("ListOfModules = {0} \nmoduleName = {1}", listOfModules[x], moduleName);
+                        if (moduleName.ToString().Contains("amsi.dll"))
+                        {
+                            //InMemoryAnalyzer(myHandle, listOfModules[x]);
+                            gch.Free();
+                            Console.WriteLine("[+] Found amsi.dll in memory");
+                            return listOfModules[x];
+                        }
+
                     }
-                    
                 }
-            }
+                
+                
+            
             gch.Free();
             Console.WriteLine("[-] Couldn't open handle");
             return IntPtr.Zero;
@@ -257,7 +289,8 @@ namespace ProcessHooker
 
             int bytesRead = 0;
             MODULEINFO amsiDLLInfo = new MODULEINFO(); //creates an object of the moduleinfo structure
-        
+
+           
             IntPtr amsiModuleHandle = AmsiHandleOpener(myHandle);
             
 
@@ -267,25 +300,25 @@ namespace ProcessHooker
             
             PeHeaderReader InMemoryAmsiReader = new PeHeaderReader(InMemoryAmsi); //read the bytes copied from the in memory amsi dll
             PeHeaderReader.IMAGE_SECTION_HEADER[] InMemoryAmsiSection = InMemoryAmsiReader.ImageSectionHeaders; //grab headers of this in memory amsi dll
-            int i;
+            PeHeaderReader.IMAGE_OPTIONAL_HEADER64 InMemoryAmsiSection2 = InMemoryAmsiReader.OptionalHeader64;
 
-            for (i = 0; i < InMemoryAmsiSection.Length; i++)
+            for (int i = 0; i < InMemoryAmsiSection.Length; i++)
             {
                 char[] headerName = InMemoryAmsiSection[i].Name; //grabbing char value and storing it into char array so we can reference it
-                if (headerName[0] == '.' && headerName[1] == 't' && headerName[2] == 'e' && headerName[3] == 'x' && headerName[4] == 't') // grab .text header for in memory amsi dll
-                    {
+                if (headerName[0] == '.' && headerName[1] == 't' && headerName[2] == 'e' && headerName[3] == 'x' && headerName[4] == 't') // grab .text header from in memory amsi dll
+                {
                     int VirtualAddr = (int)InMemoryAmsiSection[i].VirtualAddress; // .VirtualAddress is known attribute in c#
                     int SizeOfRawData = (int)InMemoryAmsiSection[i].SizeOfRawData;
                     int VirtualMemorySize = (int)InMemoryAmsiSection[i].VirtualSize;
-                    
+                    //int pointerToText = (int)InMemoryAmsiSection[i].PointerToRawData;
+
                     byte[] InMemoryAmsiCodeSection = new byte[SizeOfRawData];
                     Array.Copy(InMemoryAmsi, VirtualAddr, InMemoryAmsiCodeSection, 0, SizeOfRawData); //copy data from InMemoryAmsi located at VirtualAddr into InMemoryAmsiCodeSection, up until SizeOfRawData
                     string inMemoryAmsiHash = calculateHash(InMemoryAmsiCodeSection); // md5 Hash of ondisk Amsi.dll
 
-                    //long numericHash = Convert.ToInt64(AmsiHash, 16);
-                    //ulong.Parse(AmsiHash, System.Globalization.NumberStyles.HexNumber);
+                    PeHeaderReader.IMAGE_DATA_DIRECTORY importTable = InMemoryAmsiSection2.ImportTable;
+                    Console.WriteLine("TESTTTTTTTTT {0}",importTable.VirtualAddress);
 
-                    
                     if (inMemoryAmsiHash.Equals(onDiskAmsiHash) == false)
                     {
                         Console.WriteLine("[+] Memory Patching Detected in process: {0}", pid);
@@ -306,6 +339,7 @@ namespace ProcessHooker
                         grabDiskData.CopyOnWriteMmeorySet = 1;
 
                         //write data to csv including hash in numeric terms, entry point for process, raw data size, etc
+                        //PowerShellAnalyzer(grabData, grabDiskData, pid, myHandle);
                         csvWriter(grabData, grabDiskData);
 
                         CloseHandle(myHandle);
@@ -330,20 +364,59 @@ namespace ProcessHooker
                         grabDiskData.CopyOnWriteMmeorySet = 0;
 
                         //write data to csv including hash in numeric terms, entry point for process, raw data size, etc
+                        //PowerShellAnalyzer(grabData, grabDiskData, pid, myHandle);
                         csvWriter(grabData, grabDiskData);
                         CloseHandle(myHandle);
 
                     }
                     
-                    CheckingSharedMemory(myHandle, pid);
+                    
                     return inMemoryAmsiHash;
                 }
+
             }
             return "[-] Error: .text SECTION NOT FOUND";
         }
 
 
+        /*
+        static void PowerShellAnalyzer(Data grabData, Data grabDiskData, int pid, IntPtr myHandle)
+        {
+            Process test = Process.GetProcessById(pid);
+            //string[] modules = new string[255];
+            foreach (var module in test.Modules)
+            {
+                Console.WriteLine("Modules:{0}", module);
+            }
+            
+            IntPtr PowerShellBaseAddrHandle = AmsiHandleOpener(myHandle);
 
+
+
+            int bytesRead = 0;
+            byte[] InMemoryPowerShell = new byte[60000]; //defines a byte array to be size of the image.
+            ReadProcessMemory(myHandle, PowerShellBaseAddrHandle, InMemoryPowerShell, InMemoryPowerShell.Length, ref bytesRead); // Reads entire memory of image in bytes and stores in InMemoryPowerShell array
+
+            PeHeaderReader InMemoryPowerShellReader = new PeHeaderReader(InMemoryPowerShell); //read the bytes copied from the in memory amsi dll
+            PeHeaderReader.IMAGE_SECTION_HEADER[] InMemoryPowerShellSection = InMemoryPowerShellReader.ImageSectionHeaders; //grabs section headers of the image
+            PeHeaderReader.IMAGE_OPTIONAL_HEADER64 InMemoryPowerShellSection2 = InMemoryPowerShellReader.OptionalHeader64;
+
+            for (int i = 0; i < InMemoryPowerShell.Length; i++)
+            {
+                char[] headerName = InMemoryPowerShellSection[i].Name;
+                if (headerName[0] == '.' && headerName[1] == 'i' && headerName[2] == 'd' && headerName[3] == 'a' && headerName[4] == 't' && headerName[5] == 'a') // grab .idata header from in memory powershell
+                {
+                    uint ptrToIdata = InMemoryPowerShellSection[i].VirtualAddress;
+                    PeHeaderReader.IMAGE_DATA_DIRECTORY_IMPORT_ADDRESS importTable = InMemoryPowerShellSection2.ImportTable;
+                    
+                    //long longValue = Marshal.ReadInt64(importTable);
+
+                    Console.WriteLine(ptrToIdata);
+                    Console.WriteLine(importTable.FunctionNameList);
+                }
+            }
+        }
+        */
 
 
         static String calculateHash(byte[] bytesToHash) //takes byte array (and calls it bytesToHash) to hash (from Analyzer functions)
@@ -353,32 +426,6 @@ namespace ProcessHooker
             return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
         }
 
-
-        static void CheckingSharedMemory(IntPtr myHandle, int pid)
-        {
-            
-            var memoryInfo = new _PSAPI_WORKING_SET_EX_INFORMATION[1];
-            
-            var amsiModuleAddr = LoadLibrary("c:/Windows/System32/amsi.dll");
-            var amsiAddr = GetProcAddress(amsiModuleAddr, "AmsiScanBuffer");
-            memoryInfo[0].VirtualAddress = amsiAddr;
-            uint size = (uint)(Marshal.SizeOf(typeof(_PSAPI_WORKING_SET_EX_INFORMATION)));
-
-            bool t = QueryWorkingSetEx(myHandle, memoryInfo, size);
-            Console.WriteLine("TEST: {0}", memoryInfo[0].VirtualAttributes.IsValid);
-            if (memoryInfo[0].VirtualAttributes.IsValid)
-            {
-                // In windows processes all reference the same dll in RAM unless one alters the memory of the dll in RAM. Upon this happening the dll is copied and put into a new area of RAM only referenced by this one process
-                // This check is to see if the memory is still shared by all processes or if it has been copied, which means it has been tamepred with.
-                Console.WriteLine("[+] Powershell: {0} Has \"Copy on Write Memory\". Memory has been tampered with: {1}", pid, memoryInfo[0].VirtualAttributes.IsShareable); 
-                
-            }
-            else
-            {
-                Console.WriteLine("Hit here");
-            }
-
-        }
 
         static void Main()
         {

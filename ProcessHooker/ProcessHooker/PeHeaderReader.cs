@@ -50,6 +50,7 @@ namespace detection
             public UInt32 VirtualAddress;
             public UInt32 Size;
         }
+       
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct IMAGE_OPTIONAL_HEADER32
