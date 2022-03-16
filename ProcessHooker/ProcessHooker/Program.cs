@@ -58,7 +58,10 @@ namespace ProcessHooker
         [DllImport("psapi.dll")]
         static extern uint GetModuleFileNameEx(IntPtr hProcess, IntPtr hModule, [Out] StringBuilder lpBaseName, [In][MarshalAs(UnmanagedType.U4)] int nSize);
 
-    
+        [DllImport("kernel32.dll")]
+        public static extern bool VirtualProtectEx(IntPtr hProcess,IntPtr lpAddress,uint dwSize,uint flNewProtect, out uint lpflOldProtect);
+
+
 
 
         static void csvWriter(Data grabData, Data grabDiskData) //recieves object (Data is the class and grabData is the object name)
@@ -68,10 +71,10 @@ namespace ProcessHooker
             var dataList = new List<Data>
             {
                 new Data{ Action = grabData.Action, Priority = grabData.Priority, Label = grabData.Label, EntryPoint = grabData.EntryPoint,
-                    VirtualMemorySize = grabData.VirtualMemorySize, RawDataSize = grabData.RawDataSize, Hash = grabData.Hash, HashState = grabData.HashState, CopyOnWriteMmeorySet = grabData.CopyOnWriteMmeorySet},
+                    VirtualMemorySize = grabData.VirtualMemorySize, RawDataSize = grabData.RawDataSize, Hash = grabData.Hash, HashState = grabData.HashState, CopyOnWriteMemorySet = grabData.CopyOnWriteMemorySet},
 
                 new Data{ Action = grabDiskData.Action, Priority = grabDiskData.Priority, Label = grabDiskData.Label, EntryPoint = grabDiskData.EntryPoint,
-                    VirtualMemorySize = grabDiskData.VirtualMemorySize, RawDataSize = grabDiskData.RawDataSize, Hash = grabDiskData.Hash, HashState = grabDiskData.HashState, CopyOnWriteMmeorySet = grabDiskData.CopyOnWriteMmeorySet}
+                    VirtualMemorySize = grabDiskData.VirtualMemorySize, RawDataSize = grabDiskData.RawDataSize, Hash = grabDiskData.Hash, HashState = grabDiskData.HashState, CopyOnWriteMemorySet = grabDiskData.CopyOnWriteMemorySet}
             };
             
 
@@ -159,9 +162,8 @@ namespace ProcessHooker
             PeHeaderReader.IMAGE_SECTION_HEADER[] onDiskAmsiSection = onDiskAmsiReader.ImageSectionHeaders;
             byte[] onDiskAmsi = onDiskAmsiReader.allBytes; //read entire string of bytes of amsi file
 
-            int i;
 
-            for (i = 0;i < onDiskAmsiSection.Length; i++)
+            for (int i = 0;i < onDiskAmsiSection.Length; i++)
                 { 
                 char[] headerName = onDiskAmsiSection[i].Name; //grabbing char value and storing it into char array so we can reference it
 
@@ -261,18 +263,22 @@ namespace ProcessHooker
                     int VirtualAddr = (int)InMemoryAmsiSection[i].VirtualAddress; // .VirtualAddress is known attribute in c#
                     int SizeOfRawData = (int)InMemoryAmsiSection[i].SizeOfRawData;
                     int VirtualMemorySize = (int)InMemoryAmsiSection[i].VirtualSize;
-                    //int pointerToText = (int)InMemoryAmsiSection[i].PointerToRawData;
 
                     byte[] InMemoryAmsiCodeSection = new byte[SizeOfRawData];
                     Array.Copy(InMemoryAmsi, VirtualAddr, InMemoryAmsiCodeSection, 0, SizeOfRawData); //copy data from InMemoryAmsi located at VirtualAddr into InMemoryAmsiCodeSection, up until SizeOfRawData
-                    string inMemoryAmsiHash = calculateHash(InMemoryAmsiCodeSection); // md5 Hash of ondisk Amsi.dll
+                    string inMemoryAmsiHash = calculateHash(InMemoryAmsiCodeSection); // md5 Hash of in memory Amsi.dll
 
-
+                    /*
                     PeHeaderReader.IMAGE_DATA_DIRECTORY importTable = InMemoryAmsiSection2.ImportTable;
-                    Console.WriteLine("TESTTTTTTTTT {0}",importTable.VirtualAddress);
-
-                    //IntPtr pntrtest = importTable;
-                    var ver = Marshal.StructureToPtr(importTable.VirtualAddress, IntPtr pntrtest);
+                    PeHeaderReader.IMAGE_DATA_DIRECTORY ExportTable = InMemoryAmsiSection2.ExportTable;
+                    Console.WriteLine("Export table: {0} \n Import Table: {1}", ExportTable.VirtualAddress, importTable.VirtualAddress);
+                    IntPtr test1 = (IntPtr)importTable.VirtualAddress;
+                    IntPtr test2 = test1 + 2199;
+                    uint oldPermissions = 0;
+                    VirtualProtectEx(myHandle, test2, importTable.Size, 0x40, out oldPermissions);
+                    
+                    Console.WriteLine(Marshal.ReadIntPtr(test2)); //MemoryAccessViolation
+                    */
 
 
 
@@ -289,11 +295,11 @@ namespace ProcessHooker
                         grabData.EntryPoint = VirtualAddr;
                         grabData.VirtualMemorySize = VirtualMemorySize;
                         grabData.HashState = 1;
-                        grabData.CopyOnWriteMmeorySet = 1;
+                        grabData.CopyOnWriteMemorySet = 1;
                         grabDiskData.Action = 1;
                         grabDiskData.Priority = "High";
                         grabDiskData.HashState = 1;
-                        grabDiskData.CopyOnWriteMmeorySet = 1;
+                        grabDiskData.CopyOnWriteMemorySet = 1;
 
                         //write data to csv including hash in numeric terms, entry point for process, raw data size, etc
                         //PowerShellAnalyzer(grabData, grabDiskData, pid, myHandle);
@@ -314,11 +320,11 @@ namespace ProcessHooker
                         grabData.EntryPoint = VirtualAddr;
                         grabData.VirtualMemorySize = VirtualMemorySize;
                         grabData.HashState = 0;
-                        grabData.CopyOnWriteMmeorySet = 0;
+                        grabData.CopyOnWriteMemorySet = 0;
                         grabDiskData.Action = 0;
                         grabDiskData.Priority = "Low";
                         grabDiskData.HashState = 0;
-                        grabDiskData.CopyOnWriteMmeorySet = 0;
+                        grabDiskData.CopyOnWriteMemorySet = 0;
 
                         //write data to csv including hash in numeric terms, entry point for process, raw data size, etc
                         //PowerShellAnalyzer(grabData, grabDiskData, pid, myHandle);
@@ -424,7 +430,7 @@ namespace ProcessHooker
         public int RawDataSize { get; set; }
         public string Hash { get; set; }
         public int HashState { get; set; }
-        public int CopyOnWriteMmeorySet { get; set; }
+        public int CopyOnWriteMemorySet { get; set; }
 
     }
 
