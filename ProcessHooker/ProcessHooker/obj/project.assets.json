@@ -130,19 +130,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Dev1\\.nuget\\packages\\": {}
+    "C:\\Users\\thoma\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Dev1\\Documents\\GitHub\\General\\ProcessHooker\\ProcessHooker\\ProcessHooker.csproj",
+      "projectUniqueName": "C:\\Users\\thoma\\Documents\\GitHub\\General\\ProcessHooker\\ProcessHooker\\ProcessHooker.csproj",
       "projectName": "ProcessHooker",
-      "projectPath": "C:\\Users\\Dev1\\Documents\\GitHub\\General\\ProcessHooker\\ProcessHooker\\ProcessHooker.csproj",
-      "packagesPath": "C:\\Users\\Dev1\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Dev1\\Documents\\GitHub\\General\\ProcessHooker\\ProcessHooker\\obj\\",
+      "projectPath": "C:\\Users\\thoma\\Documents\\GitHub\\General\\ProcessHooker\\ProcessHooker\\ProcessHooker.csproj",
+      "packagesPath": "C:\\Users\\thoma\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\thoma\\Documents\\GitHub\\General\\ProcessHooker\\ProcessHooker\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\Dev1\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\thoma\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -192,7 +192,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.101\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.201\\RuntimeIdentifierGraph.json"
       }
     }
   }

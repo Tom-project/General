@@ -417,7 +417,7 @@ namespace ProcessHooker
 
     public static class MyStaticValues
     {
-        public static string DataFile = "C:/Users/Dev1/Documents/Dataset5.csv";
+        public static string DataFile = "C:/Users/thoma/Documents/ExploitDevelopment/Dataset6.csv";
     }
 
     public class Data

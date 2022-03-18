@@ -1,12 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "OoFo3Jw52VcNUEC3EIE9lwg6InXHY79JvzDHTDw51pF7wjYjO5C54gHwEXO3MhDJwydTErUel0d0zazKQW695Q==",
+  "dgSpecHash": "ZRDnbnKS9LibQ1YPZDjZhoYPbsOB9MRlVZcjmpEzEDrAo4QAzkdx3bezlMozfEM3VeInDR95mdtZvVOS20zmDw==",
   "success": true,
-  "projectFilePath": "C:\\Users\\Dev1\\Documents\\GitHub\\General\\ProcessHooker\\ProcessHooker\\ProcessHooker.csproj",
+  "projectFilePath": "C:\\Users\\thoma\\Documents\\GitHub\\General\\ProcessHooker\\ProcessHooker\\ProcessHooker.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\Dev1\\.nuget\\packages\\csvhelper\\27.2.1\\csvhelper.27.2.1.nupkg.sha512",
-    "C:\\Users\\Dev1\\.nuget\\packages\\system.codedom\\6.0.0\\system.codedom.6.0.0.nupkg.sha512",
-    "C:\\Users\\Dev1\\.nuget\\packages\\system.management\\6.0.0\\system.management.6.0.0.nupkg.sha512"
+    "C:\\Users\\thoma\\.nuget\\packages\\csvhelper\\27.2.1\\csvhelper.27.2.1.nupkg.sha512",
+    "C:\\Users\\thoma\\.nuget\\packages\\system.codedom\\6.0.0\\system.codedom.6.0.0.nupkg.sha512",
+    "C:\\Users\\thoma\\.nuget\\packages\\system.management\\6.0.0\\system.management.6.0.0.nupkg.sha512"
   ],
   "logs": []
 }
