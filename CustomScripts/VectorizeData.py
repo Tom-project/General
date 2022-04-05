@@ -76,8 +76,10 @@ def APIPull():
     for entry in pe.DIRECTORY_ENTRY_IMPORT:
         for API in entry.imports:
             API_LIST.append(API.name)
-
+            
+            
     # For some reason there was a load of Nill values in the list that broke my code when trying to decode
+   
     if None in API_LIST:
         while None in API_LIST:
             x = API_LIST.count(None)
