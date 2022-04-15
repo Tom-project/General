@@ -179,7 +179,7 @@ namespace ProcessHooker
 
                     //int numericHash = AmsiHash -> numeric value;
                     //long numericHash = Convert.ToInt64(AmsiHash, 16); //ulong.Parse(AmsiHash, System.Globalization.NumberStyles.HexNumber);
-
+                    
                     
                     Data grabDiskData = new Data();
                     grabDiskData.RawDataSize = SizeOfRawData;
